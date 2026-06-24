@@ -71,8 +71,8 @@ period framework, tested), an **Evidence.dev** SQL/Markdown site, and a
 
 | Market | Sources (anonymized) |
 |--------|----------------------|
-| **PT** | `PANEL_A` (milk + food feeds), `PANEL_B`, `PANEL_C`, `PANEL_D` (mass / pharmacy / metabolics feeds) |
-| **ES** | `PANEL_E` (pharma + others), `PANEL_F`, `PANEL_G`, `PANEL_H`, `PANEL_I` (sell-in) |
+| **PT** | `PANEL_A`, `PANEL_B`, `PANEL_C`, `PANEL_D` |
+| **ES** | `PANEL_E`, `PANEL_F`, `PANEL_G`, `PANEL_H`, `PANEL_I` |
 
 ## Conventions
 
