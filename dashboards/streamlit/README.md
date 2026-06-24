@@ -31,8 +31,8 @@ python -m streamlit run app.py        # opens http://localhost:8501
 
 ## Deploy (free public link)
 
-Push to GitHub → **share.streamlit.io** → New app → entry point
-`dashboards/streamlit/app.py`. Public URL for the root README.
+[📊 Streamlit Dashboard](https://iberia-marketshare.streamlit.app/)
+
 
 ## Fidelity note
 
