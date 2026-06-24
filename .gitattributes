@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Keep SQL and docs with LF endings across Windows/Linux
+*.sql  text eol=lf
+*.md   text eol=lf

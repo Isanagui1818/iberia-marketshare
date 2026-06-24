@@ -1,0 +1,121 @@
+Product ID,Product Name,Brand,Business Area,Business Sub Area,Category,Category ID,Format,Etapas,EP,CUnits,Conversor LKG,Product Pack,Manufacturer,Market,Sub Category,Sub Brand,Product
+1,Product_001,BrandA,Care,Body,Personal Care,7,500ml,Growth,9.66,6,1.804,Promo,Compañía SN,Care Market,Personal Care II,BrandA Standard,Product_001
+2,Product_002,BrandC,Care,Skin,Condiments,6,250ml,Mature,7.0,6,1.001,Gift,Compañía 14,Care Market,Condiments I,BrandC Premium,Product_002
+3,Product_003,Private Label,Care,Skin,Dairy,3,500ml,Mature,4.75,6,1.368,Standard,Compañía 10,Care Market,Dairy II,Private Label Standard,Product_003
+4,Product_004,BrandB,Care,Body,Beverages,1,Single,Growth,5.27,12,0.427,Standard,Compañía 01,Care Market,Beverages I,BrandB Premium,Product_004
+5,Product_005,BrandE,Food,Sweet,Frozen,5,1kg,Mature,10.25,12,0.465,Promo,Compañía 02,Food Market,Frozen II,BrandE Standard,Product_005
+6,Product_006,BrandD,Care,Skin,Snacks,2,250ml,Launch,11.41,24,0.178,Travel,Compañía 13,Care Market,Snacks I,BrandD Premium,Product_006
+7,Product_007,BrandB,Beverage,Hot Drinks,Personal Care,7,1kg,Launch,11.98,6,0.421,Travel,Compañía SN,Beverages Market,Personal Care II,BrandB Standard,Product_007
+8,Product_008,Private Label,Food,Savoury,Personal Care,7,Single,Mature,11.95,6,0.629,Promo,Compañía 11,Food Market,Personal Care I,Private Label Premium,Product_008
+9,Product_009,BrandD,Beverage,Juices,Condiments,6,200g,Mature,1.82,12,0.436,Promo,Compañía 10,Beverages Market,Condiments II,BrandD Standard,Product_009
+10,Product_010,BrandC,Beverage,Hot Drinks,Personal Care,7,Single,Mature,7.67,6,0.269,Standard,Compañía 03,Beverages Market,Personal Care I,BrandC Premium,Product_010
+11,Product_011,BrandC,Beverage,Juices,Dairy,3,200g,Mature,1.33,12,0.329,Travel,Compañía 02,Beverages Market,Dairy II,BrandC Standard,Product_011
+12,Product_012,BrandA,Beverage,Juices,Beverages,1,250ml,Decline,8.47,6,0.975,Gift,Compañía 02,Beverages Market,Beverages I,BrandA Premium,Product_012
+13,Product_013,Private Label,Food,Bakery,Personal Care,7,250ml,Mature,6.9,24,0.492,Standard,Compañía 01,Food Market,Personal Care II,Private Label Standard,Product_013
+14,Product_014,BrandE,Food,Savoury,Personal Care,7,1L,Growth,13.37,6,0.792,Promo,Compañía 03,Food Market,Personal Care I,BrandE Premium,Product_014
+15,Product_015,BrandD,Beverage,Juices,Snacks,2,500ml,Mature,5.59,6,1.056,Travel,Compañía 04,Beverages Market,Snacks II,BrandD Standard,Product_015
+16,Product_016,BrandB,Beverage,Cold Drinks,Snacks,2,1L,Growth,2.2,48,1.412,Gift,Compañía 04,Beverages Market,Snacks I,BrandB Premium,Product_016
+17,Product_017,Private Label,Food,Savoury,Bakery,4,500ml,Mature,2.57,12,0.175,Gift,Compañía 19,Food Market,Bakery II,Private Label Standard,Product_017
+18,Product_018,Private Label,Food,Savoury,Frozen,5,1L,Launch,11.54,6,1.619,Standard,Compañía 10,Food Market,Frozen I,Private Label Premium,Product_018
+19,Product_019,BrandC,Food,Savoury,Dairy,3,1kg,Launch,9.46,6,1.293,Travel,Compañía 06,Food Market,Dairy II,BrandC Standard,Product_019
+20,Product_020,BrandA,Care,Skin,Personal Care,7,250ml,Decline,1.97,48,0.255,Travel,Compañía 19,Care Market,Personal Care I,BrandA Premium,Product_020
+21,Product_021,BrandA,Care,Skin,Household,8,200g,Mature,1.72,48,1.76,Promo,Compañía 01,Care Market,Household II,BrandA Standard,Product_021
+22,Product_022,BrandD,Care,Body,Personal Care,7,500ml,Mature,10.66,12,1.85,Travel,Compañía 01,Care Market,Personal Care I,BrandD Premium,Product_022
+23,Product_023,BrandC,Beverage,Juices,Beverages,1,Single,Mature,1.56,48,0.216,Travel,Compañía 05,Beverages Market,Beverages II,BrandC Standard,Product_023
+24,Product_024,Private Label,Care,Skin,Bakery,4,500ml,Growth,12.42,24,0.626,Standard,Compañía 01,Care Market,Bakery I,Private Label Premium,Product_024
+25,Product_025,BrandE,Beverage,Juices,Frozen,5,200g,Growth,10.74,48,1.632,Travel,Compañía 01,Beverages Market,Frozen II,BrandE Standard,Product_025
+26,Product_026,BrandC,Beverage,Hot Drinks,Household,8,1L,Growth,1.68,24,1.522,Gift,Compañía 04,Beverages Market,Household I,BrandC Premium,Product_026
+27,Product_027,BrandD,Care,Body,Bakery,4,500ml,Mature,1.73,12,0.451,Standard,Compañía SN,Care Market,Bakery II,BrandD Standard,Product_027
+28,Product_028,BrandD,Beverage,Juices,Condiments,6,Multipack,Mature,14.81,12,0.498,Standard,Compañía 15,Beverages Market,Condiments I,BrandD Premium,Product_028
+29,Product_029,BrandC,Care,Body,Frozen,5,1kg,Mature,5.93,12,0.804,Promo,Compañía 06,Care Market,Frozen II,BrandC Standard,Product_029
+30,Product_030,BrandD,Care,Body,Personal Care,7,250ml,Growth,5.87,12,1.021,Travel,Compañía 04,Care Market,Personal Care I,BrandD Premium,Product_030
+31,Product_031,BrandC,Food,Sweet,Personal Care,7,200g,Decline,12.29,12,1.275,Promo,Compañía 04,Food Market,Personal Care II,BrandC Standard,Product_031
+32,Product_032,BrandB,Care,Skin,Frozen,5,250ml,Mature,14.24,24,0.801,Gift,Compañía 01,Care Market,Frozen I,BrandB Premium,Product_032
+33,Product_033,BrandC,Food,Sweet,Personal Care,7,Multipack,Mature,14.8,24,0.979,Standard,Compañía SN,Food Market,Personal Care II,BrandC Standard,Product_033
+34,Product_034,BrandC,Care,Body,Dairy,3,500ml,Mature,11.42,12,1.52,Standard,Compañía 01,Care Market,Dairy I,BrandC Premium,Product_034
+35,Product_035,BrandD,Care,Hair,Frozen,5,500ml,Mature,5.96,48,0.17,Standard,Compañía 07,Care Market,Frozen II,BrandD Standard,Product_035
+36,Product_036,BrandD,Food,Savoury,Bakery,4,Single,Growth,1.71,6,0.58,Gift,Compañía 01,Food Market,Bakery I,BrandD Premium,Product_036
+37,Product_037,BrandA,Food,Savoury,Frozen,5,Multipack,Mature,11.77,12,1.455,Gift,Compañía 02,Food Market,Frozen II,BrandA Standard,Product_037
+38,Product_038,BrandA,Care,Body,Household,8,200g,Mature,8.6,48,1.801,Promo,Compañía SN,Care Market,Household I,BrandA Premium,Product_038
+39,Product_039,BrandB,Beverage,Cold Drinks,Personal Care,7,Single,Launch,6.65,6,1.072,Promo,Compañía 11,Beverages Market,Personal Care II,BrandB Standard,Product_039
+40,Product_040,BrandA,Food,Sweet,Dairy,3,1kg,Growth,13.64,12,1.111,Promo,Compañía SN,Food Market,Dairy I,BrandA Premium,Product_040
+41,Product_041,BrandC,Beverage,Cold Drinks,Dairy,3,Single,Launch,2.11,12,0.304,Travel,Compañía 01,Beverages Market,Dairy II,BrandC Standard,Product_041
+42,Product_042,BrandD,Beverage,Hot Drinks,Condiments,6,500g,Launch,7.64,24,0.95,Standard,Compañía 13,Beverages Market,Condiments I,BrandD Premium,Product_042
+43,Product_043,BrandA,Beverage,Hot Drinks,Bakery,4,200g,Decline,0.66,6,1.112,Standard,Compañía 04,Beverages Market,Bakery II,BrandA Standard,Product_043
+44,Product_044,BrandA,Food,Sweet,Snacks,2,500g,Mature,7.3,6,0.561,Promo,Compañía 12,Food Market,Snacks I,BrandA Premium,Product_044
+45,Product_045,BrandB,Beverage,Hot Drinks,Snacks,2,Multipack,Mature,1.32,48,0.612,Standard,Compañía 06,Beverages Market,Snacks II,BrandB Standard,Product_045
+46,Product_046,Private Label,Food,Savoury,Frozen,5,1L,Launch,2.22,24,0.817,Promo,Compañía 08,Food Market,Frozen I,Private Label Premium,Product_046
+47,Product_047,BrandB,Beverage,Cold Drinks,Condiments,6,500g,Mature,2.2,24,0.138,Travel,Compañía 01,Beverages Market,Condiments II,BrandB Standard,Product_047
+48,Product_048,BrandC,Care,Skin,Beverages,1,1kg,Mature,9.91,24,0.712,Travel,Compañía 04,Care Market,Beverages I,BrandC Premium,Product_048
+49,Product_049,BrandD,Care,Hair,Frozen,5,Single,Growth,11.32,24,0.502,Gift,Compañía 04,Care Market,Frozen II,BrandD Standard,Product_049
+50,Product_050,BrandB,Food,Sweet,Condiments,6,1L,Mature,8.96,6,0.722,Travel,Compañía 13,Food Market,Condiments I,BrandB Premium,Product_050
+51,Product_051,BrandA,Care,Body,Bakery,4,Single,Mature,14.45,6,0.328,Promo,Compañía 02,Care Market,Bakery II,BrandA Standard,Product_051
+52,Product_052,BrandD,Care,Hair,Bakery,4,500g,Mature,5.94,12,1.792,Travel,Compañía 05,Care Market,Bakery I,BrandD Premium,Product_052
+53,Product_053,BrandD,Beverage,Hot Drinks,Bakery,4,Single,Mature,4.64,12,1.228,Gift,Compañía 01,Beverages Market,Bakery II,BrandD Standard,Product_053
+54,Product_054,BrandA,Food,Bakery,Bakery,4,Multipack,Launch,13.09,24,1.39,Standard,Compañía 02,Food Market,Bakery I,BrandA Premium,Product_054
+55,Product_055,BrandB,Beverage,Cold Drinks,Bakery,4,1L,Mature,3.74,24,1.599,Promo,Compañía SN,Beverages Market,Bakery II,BrandB Standard,Product_055
+56,Product_056,BrandA,Beverage,Juices,Condiments,6,Multipack,Mature,14.47,24,1.047,Standard,Compañía 01,Beverages Market,Condiments I,BrandA Premium,Product_056
+57,Product_057,Private Label,Beverage,Hot Drinks,Condiments,6,500g,Mature,0.68,12,0.265,Gift,Compañía 11,Beverages Market,Condiments II,Private Label Standard,Product_057
+58,Product_058,BrandD,Beverage,Cold Drinks,Dairy,3,Multipack,Decline,14.56,48,1.121,Gift,Compañía 02,Beverages Market,Dairy I,BrandD Premium,Product_058
+59,Product_059,BrandE,Beverage,Hot Drinks,Household,8,1kg,Mature,1.13,48,1.215,Gift,Compañía 18,Beverages Market,Household II,BrandE Standard,Product_059
+60,Product_060,BrandE,Beverage,Juices,Snacks,2,500g,Growth,13.42,12,1.516,Standard,Compañía 05,Beverages Market,Snacks I,BrandE Premium,Product_060
+61,Product_061,BrandC,Beverage,Cold Drinks,Personal Care,7,500g,Launch,8.15,12,0.92,Standard,Compañía 05,Beverages Market,Personal Care II,BrandC Standard,Product_061
+62,Product_062,BrandA,Food,Bakery,Bakery,4,500g,Mature,14.9,12,0.342,Standard,Compañía 06,Food Market,Bakery I,BrandA Premium,Product_062
+63,Product_063,BrandA,Care,Body,Beverages,1,200g,Launch,1.57,12,0.639,Standard,Compañía 07,Care Market,Beverages II,BrandA Standard,Product_063
+64,Product_064,BrandC,Beverage,Cold Drinks,Personal Care,7,Single,Mature,8.53,12,0.79,Gift,Compañía 01,Beverages Market,Personal Care I,BrandC Premium,Product_064
+65,Product_065,BrandC,Beverage,Juices,Condiments,6,200g,Decline,14.55,12,1.327,Gift,Compañía 03,Beverages Market,Condiments II,BrandC Standard,Product_065
+66,Product_066,BrandC,Beverage,Hot Drinks,Beverages,1,200g,Mature,8.08,24,1.184,Promo,Compañía SN,Beverages Market,Beverages I,BrandC Premium,Product_066
+67,Product_067,BrandD,Beverage,Juices,Beverages,1,1kg,Mature,9.63,24,0.777,Promo,Compañía SN,Beverages Market,Beverages II,BrandD Standard,Product_067
+68,Product_068,Private Label,Beverage,Hot Drinks,Beverages,1,1L,Mature,10.59,24,1.974,Standard,Compañía SN,Beverages Market,Beverages I,Private Label Premium,Product_068
+69,Product_069,BrandA,Beverage,Hot Drinks,Dairy,3,Single,Mature,7.09,24,1.251,Travel,Compañía 18,Beverages Market,Dairy II,BrandA Standard,Product_069
+70,Product_070,BrandD,Care,Body,Condiments,6,Multipack,Mature,9.6,12,0.551,Travel,Compañía 01,Care Market,Condiments I,BrandD Premium,Product_070
+71,Product_071,BrandC,Care,Skin,Beverages,1,500ml,Decline,8.97,48,0.293,Gift,Compañía 07,Care Market,Beverages II,BrandC Standard,Product_071
+72,Product_072,BrandA,Beverage,Cold Drinks,Bakery,4,500g,Mature,13.57,6,0.39,Gift,Compañía 02,Beverages Market,Bakery I,BrandA Premium,Product_072
+73,Product_073,BrandD,Care,Skin,Frozen,5,Multipack,Decline,1.16,12,0.567,Gift,Compañía SN,Care Market,Frozen II,BrandD Standard,Product_073
+74,Product_074,Private Label,Food,Savoury,Beverages,1,500g,Decline,4.57,6,0.405,Promo,Compañía 06,Food Market,Beverages I,Private Label Premium,Product_074
+75,Product_075,BrandD,Beverage,Hot Drinks,Dairy,3,1kg,Growth,14.28,48,0.454,Promo,Compañía 01,Beverages Market,Dairy II,BrandD Standard,Product_075
+76,Product_076,Private Label,Food,Sweet,Personal Care,7,500g,Launch,13.41,24,0.642,Gift,Compañía 12,Food Market,Personal Care I,Private Label Premium,Product_076
+77,Product_077,BrandC,Food,Sweet,Condiments,6,200g,Growth,7.11,48,0.429,Gift,Compañía SN,Food Market,Condiments II,BrandC Standard,Product_077
+78,Product_078,Private Label,Beverage,Cold Drinks,Household,8,Single,Launch,9.49,12,1.804,Gift,Compañía 14,Beverages Market,Household I,Private Label Premium,Product_078
+79,Product_079,BrandA,Care,Body,Dairy,3,500ml,Launch,4.52,24,0.252,Travel,Compañía 05,Care Market,Dairy II,BrandA Standard,Product_079
+80,Product_080,BrandC,Food,Sweet,Beverages,1,250ml,Mature,3.23,12,1.097,Promo,Compañía 01,Food Market,Beverages I,BrandC Premium,Product_080
+81,Product_081,BrandA,Beverage,Hot Drinks,Condiments,6,500g,Launch,7.22,24,0.88,Travel,Compañía 01,Beverages Market,Condiments II,BrandA Standard,Product_081
+82,Product_082,BrandE,Food,Sweet,Frozen,5,Multipack,Growth,5.62,6,1.967,Travel,Compañía 16,Food Market,Frozen I,BrandE Premium,Product_082
+83,Product_083,BrandB,Food,Sweet,Beverages,1,200g,Mature,8.96,6,0.313,Gift,Compañía 04,Food Market,Beverages II,BrandB Standard,Product_083
+84,Product_084,Private Label,Food,Savoury,Dairy,3,250ml,Launch,1.63,6,0.856,Gift,Compañía 01,Food Market,Dairy I,Private Label Premium,Product_084
+85,Product_085,BrandB,Food,Bakery,Snacks,2,500ml,Mature,14.63,48,1.942,Standard,Compañía 14,Food Market,Snacks II,BrandB Standard,Product_085
+86,Product_086,BrandB,Care,Hair,Bakery,4,250ml,Growth,14.8,12,1.744,Standard,Compañía SN,Care Market,Bakery I,BrandB Premium,Product_086
+87,Product_087,Private Label,Food,Bakery,Household,8,200g,Growth,10.62,48,1.652,Travel,Compañía 05,Food Market,Household II,Private Label Standard,Product_087
+88,Product_088,BrandC,Food,Bakery,Personal Care,7,Single,Mature,8.27,6,0.59,Promo,Compañía 02,Food Market,Personal Care I,BrandC Premium,Product_088
+89,Product_089,BrandE,Food,Bakery,Dairy,3,Single,Mature,4.99,12,0.425,Gift,Compañía 03,Food Market,Dairy II,BrandE Standard,Product_089
+90,Product_090,BrandA,Care,Skin,Condiments,6,1L,Decline,12.3,6,1.37,Gift,Compañía SN,Care Market,Condiments I,BrandA Premium,Product_090
+91,Product_091,BrandD,Food,Bakery,Household,8,Single,Mature,10.43,48,1.866,Travel,Compañía 01,Food Market,Household II,BrandD Standard,Product_091
+92,Product_092,BrandA,Food,Bakery,Household,8,1L,Mature,2.86,48,1.158,Standard,Compañía 13,Food Market,Household I,BrandA Premium,Product_092
+93,Product_093,BrandD,Care,Skin,Household,8,250ml,Growth,13.71,48,1.186,Promo,Compañía 03,Care Market,Household II,BrandD Standard,Product_093
+94,Product_094,BrandA,Care,Body,Beverages,1,1kg,Growth,12.43,6,0.632,Standard,Compañía 04,Care Market,Beverages I,BrandA Premium,Product_094
+95,Product_095,Private Label,Care,Body,Bakery,4,Multipack,Mature,14.27,12,1.562,Standard,Compañía 02,Care Market,Bakery II,Private Label Standard,Product_095
+96,Product_096,BrandE,Food,Savoury,Beverages,1,Multipack,Mature,11.02,12,0.455,Standard,Compañía 09,Food Market,Beverages I,BrandE Premium,Product_096
+97,Product_097,BrandD,Care,Skin,Condiments,6,250ml,Decline,9.39,6,0.715,Standard,Compañía SN,Care Market,Condiments II,BrandD Standard,Product_097
+98,Product_098,BrandC,Care,Hair,Beverages,1,500g,Mature,6.56,12,0.908,Gift,Compañía 02,Care Market,Beverages I,BrandC Premium,Product_098
+99,Product_099,BrandA,Food,Sweet,Snacks,2,500g,Mature,14.02,6,1.064,Gift,Compañía 01,Food Market,Snacks II,BrandA Standard,Product_099
+100,Product_100,BrandA,Care,Hair,Bakery,4,Single,Mature,13.06,12,0.561,Standard,Compañía 01,Care Market,Bakery I,BrandA Premium,Product_100
+101,Product_101,BrandD,Food,Bakery,Bakery,4,Multipack,Growth,1.16,24,0.318,Promo,Compañía 18,Food Market,Bakery II,BrandD Standard,Product_101
+102,Product_102,BrandC,Beverage,Juices,Condiments,6,Multipack,Decline,0.88,24,1.26,Travel,Compañía 06,Beverages Market,Condiments I,BrandC Premium,Product_102
+103,Product_103,BrandC,Care,Body,Personal Care,7,1L,Decline,5.96,48,0.648,Promo,Compañía 03,Care Market,Personal Care II,BrandC Standard,Product_103
+104,Product_104,Private Label,Beverage,Hot Drinks,Snacks,2,1kg,Mature,12.25,24,1.204,Promo,Compañía 04,Beverages Market,Snacks I,Private Label Premium,Product_104
+105,Product_105,Private Label,Food,Bakery,Dairy,3,200g,Mature,14.82,24,0.393,Promo,Compañía 13,Food Market,Dairy II,Private Label Standard,Product_105
+106,Product_106,Private Label,Care,Hair,Beverages,1,500g,Mature,2.68,24,1.014,Standard,Compañía SN,Care Market,Beverages I,Private Label Premium,Product_106
+107,Product_107,Private Label,Food,Savoury,Frozen,5,Multipack,Growth,9.11,6,1.112,Gift,Compañía 05,Food Market,Frozen II,Private Label Standard,Product_107
+108,Product_108,Private Label,Beverage,Hot Drinks,Beverages,1,1L,Decline,6.02,24,0.198,Promo,Compañía 07,Beverages Market,Beverages I,Private Label Premium,Product_108
+109,Product_109,Private Label,Food,Savoury,Household,8,500ml,Mature,14.56,24,0.74,Standard,Compañía 02,Food Market,Household II,Private Label Standard,Product_109
+110,Product_110,BrandE,Care,Hair,Beverages,1,1L,Mature,12.71,48,0.355,Promo,Compañía 04,Care Market,Beverages I,BrandE Premium,Product_110
+111,Product_111,BrandC,Care,Hair,Dairy,3,500g,Growth,12.66,24,0.22,Promo,Compañía 09,Care Market,Dairy II,BrandC Standard,Product_111
+112,Product_112,Private Label,Beverage,Cold Drinks,Beverages,1,500g,Decline,7.3,24,1.981,Standard,Compañía 15,Beverages Market,Beverages I,Private Label Premium,Product_112
+113,Product_113,BrandC,Food,Savoury,Snacks,2,1L,Mature,6.51,12,0.712,Gift,Compañía 01,Food Market,Snacks II,BrandC Standard,Product_113
+114,Product_114,BrandC,Care,Skin,Snacks,2,200g,Launch,4.46,48,1.639,Gift,Compañía 16,Care Market,Snacks I,BrandC Premium,Product_114
+115,Product_115,BrandB,Beverage,Juices,Bakery,4,250ml,Decline,1.32,48,0.584,Travel,Compañía SN,Beverages Market,Bakery II,BrandB Standard,Product_115
+116,Product_116,BrandE,Care,Body,Condiments,6,500g,Launch,13.04,48,1.395,Standard,Compañía SN,Care Market,Condiments I,BrandE Premium,Product_116
+117,Product_117,Private Label,Care,Hair,Personal Care,7,1L,Growth,12.29,48,1.544,Travel,Compañía 11,Care Market,Personal Care II,Private Label Standard,Product_117
+118,Product_118,BrandA,Food,Savoury,Frozen,5,Multipack,Decline,15.0,48,1.232,Travel,Compañía 01,Food Market,Frozen I,BrandA Premium,Product_118
+119,Product_119,BrandD,Care,Body,Household,8,1L,Decline,14.95,48,0.996,Travel,Compañía 03,Care Market,Household II,BrandD Standard,Product_119
+120,Product_120,BrandA,Food,Sweet,Beverages,1,1kg,Mature,8.55,6,0.882,Gift,Compañía 11,Food Market,Beverages I,BrandA Premium,Product_120

@@ -1,0 +1,116 @@
+// =============================================================================
+// Field parameters (6) — real model, anonymized.
+// Create each via Modeling -> New parameter -> Fields (so PBI adds the field-
+// parameter metadata), then REPLACE the generated DAX with the block below.
+// The "...Year/Periodo" ones switch MEASURES; ParameterField switches COLUMNS.
+// Create measures (03) and _AuxPeriod (01) first — these reference them.
+// =============================================================================
+
+// ---- ParameterField ----
+ParameterField = {
+-- Producto
+    ("Área de Negocio", NAMEOF('DIM_PROD'[Business Area]), 0, "1. Producto"),
+    ("Compañía", NAMEOF('DIM_PROD'[Manufacturer]), 1, "1. Producto"),
+    ("Categoría", NAMEOF('DIM_PROD'[Category]), 2, "1. Producto"),
+    ("SubCategoría", NAMEOF('DIM_PROD'[Sub Category]), 3, "1. Producto"),
+    ("Entorno", NAMEOF('DIM_CHANNEL'[Type Channel]), 4, "1. Producto"),
+    ("Canal", NAMEOF('DIM_CHANNEL'[Channel]), 5, "1. Producto"),
+    ("SubCanal", NAMEOF('DIM_CHANNEL'[SubChannel]), 6, "1. Producto"),
+    ("Marca", NAMEOF('DIM_PROD'[Brand]), 7, "1. Producto"),
+    ("Sub Marca", NAMEOF(DIM_PROD[Sub Brand]), 8 , "1. Producto"),
+    ("Producto", NAMEOF('DIM_PROD'[Product]), 9, "1. Producto"),
+    ("Product Pack", NAMEOF('DIM_PROD'[Product Pack]), 10, "1. Producto"),
+    ("Formato", NAMEOF(DIM_PROD[Format]), 11, "1. Producto"),
+    ("Market", NAMEOF(DIM_PROD[Market]), 12, "1. Producto"),
+    ("Etapa", NAMEOF(DIM_PROD[Etapas]), 13, "1. Producto"),
+
+-- Métrica
+    ("Métrica",NAMEOF(DIM_UNITS[KPI Flag]),14, "2. Métrica"),
+
+-- Calendario
+    ("Año", NAMEOF('DIM_CALENDAR'[Year]), 15, "3. Calendario"),
+    ("Mes", NAMEOF('DIM_CALENDAR'[Month Long]), 16, "3. Calendario")
+}
+
+// ---- ParameterMarket Year ----
+ParameterMarket Year = {
+    ("Market Share Período Switch", NAMEOF('Measure'[Market Share Período Switch]), 1),
+    ("Ventas Periodos Switch", NAMEOF('Measure'[Ventas Períodos Switch]), 2),
+    ("BPS Mes LY", NAMEOF('Measure'[BPS Período LY Switch]), 3)
+}
+
+// ---- ParameterKPIs ----
+ParameterKPIs = {
+-- MES
+    ("Ventas Mes", NAMEOF('Measure'[Ventas Mes]), 0,"1. Mes"),
+    ("Ventas Mes-1", NAMEOF('Measure'[Ventas Mes-1]), 1,"1. Mes"),
+    ("Ventas Mes LY", NAMEOF('Measure'[Ventas Mes LY]), 2, "1. Mes"),
+    ("Crecimiento Mes", NAMEOF('Measure'[Crecimiento Mes]), 3,"1. Mes"),
+    ("%Crecimiento Mes", NAMEOF('Measure'[%Crecimiento Mes]), 4,"1. Mes"),
+    ("Crecimiento Mes LY", NAMEOF('Measure'[Crecimiento Mes LY]), 5, "1. Mes"),
+    ("%Crecimiento Mes LY", NAMEOF('Measure'[%Crecimiento Mes LY]), 6, "1. Mes"),
+    ("Market Share Mes", NAMEOF('Measure'[Market Share Mes]), 7,"1. Mes"),
+    ("Market Share Mes-1", NAMEOF('Measure'[Market Share Mes-1]), 8,"1. Mes"),
+    ("Market Share Mes LY", NAMEOF('Measure'[Market Share Mes LY]), 9, "1. Mes"),
+    ("BPS Mes", NAMEOF('Measure'[BPS Mes]), 10,"1. Mes"),
+    ("BPS Mes LY", NAMEOF('Measure'[BPS Mes LY]), 11, "1. Mes"),
+    ("%Peso Mes", NAMEOF('Measure'[%Peso Mes]), 12, "1. Mes"),
+    ("%Peso Mes-1", NAMEOF('Measure'[%Peso Mes-1]), 13, "1. Mes"),
+    ("%Peso Mes LY", NAMEOF('Measure'[%Peso Mes LY]), 14, "1. Mes"),
+
+-- L4M
+    ("Ventas L4M", NAMEOF('Measure'[Ventas L4M]), 15,"2. L4M"),
+    ("Ventas L4M-1", NAMEOF('Measure'[Ventas L4M-1]), 16, "2. L4M"),
+    ("Crecimiento L4M", NAMEOF('Measure'[Crecimiento L4M]), 17, "2. L4M"),
+    ("%Crecimiento L4M", NAMEOF('Measure'[%Crecimiento L4M]), 18, "2. L4M"),   
+    ("Market Share L4M",NAMEOF('Measure'[Market Share L4M]), 19, "2. L4M"),
+    ("Market Share L4M-1", NAMEOF('Measure'[Market Share L4M-1]), 20, "2. L4M"),
+    ("BPS L4M", NAMEOF('Measure'[BPS L4M]), 21,"2. L4M"),
+    ("%Peso L4M", NAMEOF('Measure'[%Peso L4M]), 22, "2. L4M"),
+    ("%Peso L4M-1", NAMEOF('Measure'[%Peso L4M-1]), 23, "2. L4M"),
+    
+-- YTD
+    ("Ventas YTD", NAMEOF('Measure'[Ventas YTD]), 24,"3. YTD"),
+    ("Ventas YTD-1", NAMEOF('Measure'[Ventas YTD-1]), 25,"3. YTD"),
+    ("Crecimiento YTD", NAMEOF('Measure'[Crecimiento YTD]), 26,"3. YTD"),
+    ("%Crecimiento YTD", NAMEOF('Measure'[%Crecimiento YTD]), 27,"3. YTD"),
+    ("Market Share YTD", NAMEOF('Measure'[Market Share YTD]), 28,"3. YTD"),
+    ("Market Share YTD-1", NAMEOF('Measure'[Market Share YTD-1]), 29,"3. YTD"),
+    ("BPS YTD", NAMEOF('Measure'[BPS YTD]), 30,"3. YTD"),
+    ("%Peso YTD", NAMEOF('Measure'[%Peso YTD]), 31,"3. YTD"),
+    ("%Peso YTD-1", NAMEOF('Measure'[%Peso YTD-1]), 32,"3. YTD"),
+
+-- TAM
+    ("Ventas TAM", NAMEOF('Measure'[Ventas TAM]), 33,"4. TAM"),
+    ("Ventas TAM-1", NAMEOF('Measure'[Ventas TAM-1]), 34,"4. TAM"),
+    ("Crecimiento TAM", NAMEOF('Measure'[Crecimiento TAM]), 35,"4. TAM"),
+    ("%Crecimiento TAM", NAMEOF('Measure'[%Crecimiento TAM]), 36,"4. TAM"),
+    ("Market Share TAM", NAMEOF('Measure'[Market Share TAM]), 37,"4. TAM"),
+    ("Market Share TAM-1", NAMEOF('Measure'[Market Share TAM-1]), 38,"4. TAM"),
+    ("BPS TAM", NAMEOF('Measure'[BPS TAM]), 39,"4. TAM"),
+    ("%Peso TAM", NAMEOF('Measure'[%Peso TAM]), 40,"4. TAM"),
+    ("%Peso TAM-1", NAMEOF('Measure'[%Peso TAM-1]), 41,"4. TAM")
+
+}
+
+// ---- ParameterMarket Year-1 ----
+ParameterMarket Year-1 = {
+    ("Market Share Y-1 Switch", NAMEOF('Measure'[Market Share Y-1 Switch]), 1),
+    ("Ventas Y-1 Switch", NAMEOF('Measure'[Ventas Y-1 Switch]), 2)
+}
+
+// ---- ParameterMarket Período-1 ----
+ParameterMarket Período-1 = {
+    ("Market Share-1", NAMEOF('Measure'[Market Share Período-1 Switch]), 1),
+    ("Ventaas Periodos-1", NAMEOF('Measure'[Ventas Periodos-1 Switch]), 2)
+}
+
+// ---- ParameterMarket Período ----
+ParameterMarket Período = {
+    ("Market Share", NAMEOF('Measure'[Market Share Período Switch]), 1),
+    ("Ventas", NAMEOF('Measure'[Ventas Períodos Switch]), 2),
+    ("BPS", NAMEOF('Measure'[BPS Período Switch]), 3),
+    ("Evolución (en €)", NAMEOF([Crecimiento Ventas Períodos Switch]), 4),
+    ("Evolución (en %)", NAMEOF([%Crecimiento Período Switch]), 5)
+}
+

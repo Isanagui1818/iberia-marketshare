@@ -1,0 +1,23 @@
+# Binary BI files / spreadsheets are NOT tracked.
+# They stay on disk locally (e.g. data/synthetic/) so you always know where they are,
+# but they never get committed — avoids shipping any embedded data.
+*.pbix
+*.pbit
+*.xlsx
+*.xlsm
+*.csv
+
+# ...but the dashboards need their (synthetic, anonymized) data committed to deploy
+!dashboards/data/**
+
+# Python / Node build artifacts
+__pycache__/
+*.pyc
+node_modules/
+.evidence/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

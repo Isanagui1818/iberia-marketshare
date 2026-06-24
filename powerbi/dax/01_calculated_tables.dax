@@ -1,0 +1,20 @@
+// =============================================================================
+// Disconnected helper table: the period-type selector that drives every
+// "...Período Switch" measure via SUM(_AuxPeriod[Selected Period ID]).
+//   ID 4 = MES (month)      ID 3 = L4M (last 4 months)
+//   ID 2 = YTD              ID 1 = TAM (moving annual total)
+// The [Selected Period] text "MES" is also read by [Control de Visibilidad]
+// and [Período de Comparación]. Paste via Modeling -> New table.
+// =============================================================================
+
+_AuxPeriod =
+DATATABLE (
+    "Selected Period",    STRING,
+    "Selected Period ID", INTEGER,
+    {
+        { "MES", 4 },
+        { "L4M", 3 },
+        { "YTD", 2 },
+        { "TAM", 1 }
+    }
+)

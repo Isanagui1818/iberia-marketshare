@@ -1,0 +1,4 @@
+name: marketshare
+type: duckdb
+options:
+  filename: ":memory:"

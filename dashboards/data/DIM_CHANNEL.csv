@@ -1,0 +1,6 @@
+Channel ID,Channel Name,Channel,SubChannel,Type Channel
+1,Retail,Retail,Retail Sub,Offline
+2,Wholesale,Wholesale,Wholesale Sub,Offline
+3,E-Commerce,E-Commerce,E-Commerce Sub,Online
+4,Pharmacy,Pharmacy,Pharmacy Sub,Offline
+5,Specialty,Specialty,Specialty Sub,Offline
