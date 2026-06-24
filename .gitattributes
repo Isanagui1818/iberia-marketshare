@@ -1,20 +1,16 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# Keep SQL and docs with LF endings across Windows/Linux
-*.sql  text eol=lf
-*.md   text eol=lf
+# Auto detect text files and perform LF normalization
+* text=auto
 
-# Binary files - ignore completely from stats
-*.pbix linguist-ignored
-*.xlsx linguist-ignored
-*.csv linguist-generated=true
-*.pbit linguist-ignored
+# Ignore EVERYTHING by default
+* linguist-ignored
 
-# Exclude entire folders from language detection
-dashboards/** linguist-ignored
-powerbi/** linguist-ignored
+# Only detect SQL and Python
+*.sql linguist-language=sql
+*.py linguist-language=python
 
-# Explicitly mark your actual languages
-*.sql linguist-detectable=true
-*.py linguist-detectable=true
+# Keep proper line endings
+*.sql text eol=lf
+*.md text eol=lf
