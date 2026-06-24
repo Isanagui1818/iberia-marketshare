@@ -4,3 +4,12 @@
 # Keep SQL and docs with LF endings across Windows/Linux
 *.sql  text eol=lf
 *.md   text eol=lf
+
+# Binary files (exclude from language stats)
+*.pbix linguist-binary
+*.xlsx linguist-binary
+*.csv linguist-generated=true
+
+# Explicitly mark your actual languages
+*.sql linguist-detectable=true
+*.py linguist-detectable=true
