@@ -5,10 +5,15 @@
 *.sql  text eol=lf
 *.md   text eol=lf
 
-# Binary files (exclude from language stats)
-*.pbix linguist-binary
-*.xlsx linguist-binary
+# Binary files - ignore completely from stats
+*.pbix linguist-ignored
+*.xlsx linguist-ignored
 *.csv linguist-generated=true
+*.pbit linguist-ignored
+
+# Exclude entire folders from language detection
+dashboards/** linguist-ignored
+powerbi/** linguist-ignored
 
 # Explicitly mark your actual languages
 *.sql linguist-detectable=true
