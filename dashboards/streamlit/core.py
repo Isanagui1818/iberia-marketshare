@@ -44,7 +44,10 @@ FIELDS = {"Área de Negocio": "Business Area", "Compañía": "Manufacturer", "Ca
 def window(anchor, tipo, variant):
     i = PERIODS.index(anchor)
     yr = anchor // 100
-    last = lambda n, e: PERIODS[max(0, e - n + 1): e + 1]
+    # Ventana de n períodos que termina en el índice e. Si e < 0 la ventana cae entera
+    # antes del inicio de los datos (no hay período anterior) -> vacía, en vez de hacer
+    # slicing con índice negativo (que devolvería una ventana errónea).
+    last = lambda n, e: PERIODS[max(0, e - n + 1): e + 1] if e >= 0 else []
     ytd = lambda y, u: [p for p in PERIODS if p // 100 == y and p <= u]
     ly = anchor - 100
     lyi = PERIODS.index(ly) if ly in PERIODS else None

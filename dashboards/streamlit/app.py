@@ -78,7 +78,8 @@ def topnav():
 def filtros(solo_fecha=False):
     years = sorted(C.CAL["Year"].unique())
     c = st.columns(8)
-    anio = c[0].selectbox("Año", ["Todas"] + years, key="f_anio")
+    # Por defecto, el año más reciente con datos (índice al último de la lista)
+    anio = c[0].selectbox("Año", ["Todas"] + years, index=len(years), key="f_anio")
     mes = c[1].selectbox("Mes", ["Mes Actual"] + C.MESES, key="f_mes")
     yr = max(years) if anio == "Todas" else anio
     months = sorted(C.CAL.loc[C.CAL["Year"] == yr, "Month Number"].unique())
@@ -238,8 +239,11 @@ def page_vista():
     b1, b2 = st.columns([2, 3])
     top = ct.head(7).iloc[::-1]
     b1.markdown("**Top 7 en Ventas**")
+    # Verde si mejora o iguala al período anterior, rojo si cae. Usamos el crecimiento
+    # absoluto: si no hay período anterior con datos, el crecimiento es la venta entera
+    # (> 0) -> verde, asumiendo mejora al no haber comparativa (mismo criterio que Evidence).
     figb = go.Figure(go.Bar(x=top["Ventas"], y=top["Compañía"], orientation="h",
-                            marker_color=[C.color(x) for x in top["%Crecimiento Ventas"]],
+                            marker_color=[C.GREEN if x >= 0 else C.RED for x in top["Crecimiento Ventas"]],
                             text=[C.es_mill(v) for v in top["Ventas"]], textposition="outside",
                             cliponaxis=False))
     figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10))
