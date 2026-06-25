@@ -5,7 +5,7 @@ Each dashboard reimplements the Power BI report on the synthetic dataset. Once a
 is operational it is also **published online and can be consulted directly — no setup
 required:**
 
-- **Streamlit (live)** — **[iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)**
+- **Streamlit (live)** — **[📊iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)**
 - **Evidence** — _pending publication_
 - **Looker Studio** — _pending publication_
 
