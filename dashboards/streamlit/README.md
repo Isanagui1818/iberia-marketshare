@@ -6,6 +6,10 @@
 Multi-page Python replica of the Power BI report, in Spanish, on the synthetic data.
 A code-native version of the original 8-page report.
 
+**Live app — [iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)** ·
+published and ready to consult, no setup required. The [Run locally](#run-locally) section
+below is only needed to launch it on your own machine.
+
 ## Pages
 
 `Menú` (landing + nav) · `Glosario` · `Vista General` (KPIs, increment vs prior period,
@@ -31,11 +35,6 @@ python -m streamlit run app.py        # opens http://localhost:8501
 > Reads `../data/*.csv`. The dataset now has ~19 anonymized companies (`Compañía SN` is the
 > focal one) so the "Top 7" makes sense — the source workbook was updated too, so a Power BI
 > refresh stays consistent.
-
-## Deploy (free public link)
-
-[📊 Streamlit Dashboard](https://iberia-marketshare.streamlit.app/)
-
 
 ## Fidelity note
 
