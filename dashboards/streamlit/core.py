@@ -9,6 +9,7 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 NAVY, BLUE, ACCENT = "#0A2A66", "#1F4E9E", "#1467BC"
 MENU = "#002060"   # tono del menú (botones izq. fondo / texto derecha)
 GREEN, RED = "#2E9E5B", "#D23B3B"
+ORANGE, GRAY = "#E8941A", "#888888"   # naranja = sin variación · gris = sin comparativa
 MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
 
@@ -88,13 +89,18 @@ def market_share(comp_df, mkt_df, periods):
     return ventas(comp_df, periods) / tot if tot else 0.0
 
 
-def bps(ms_cur, ms_prev):
-    return (ms_cur - ms_prev) * 10000
+def bps(ms_cur, ms_prev, has_prior=True):
+    # BPS es por definición una diferencia entre dos períodos. Si no hay período anterior
+    # con el que comparar, la resta (ms_cur - 0) y su ×10000 darían un valor irreal, así
+    # que devolvemos 0 (se mostrará en gris como "sin comparativa").
+    return (ms_cur - ms_prev) * 10000 if has_prior else 0.0
 
 
 def company_table(mkt_df, tipo, anchor):
-    """Tabla por compañía: Ventas, MS, BPS, Crecimiento, %Crecimiento (período 'tipo')."""
+    """Tabla por compañía: Ventas, MS, BPS, Crecimiento, %Crecimiento (período 'tipo').
+    Si no hay período anterior (has_prior=False) las medidas comparativas valen 0."""
     cur, prev = window(anchor, tipo, "current"), window(anchor, tipo, "prev")
+    has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
     rows = []
     for c in mkt_df["Manufacturer"].dropna().unique():
@@ -102,15 +108,19 @@ def company_table(mkt_df, tipo, anchor):
         v, vp = ventas(cd, cur), ventas(cd, prev)
         ms = v / tot_cur if tot_cur else 0
         msp = vp / tot_prev if tot_prev else 0
-        rows.append({"Compañía": c, "Ventas": v, "Market Share": ms, "BPS": bps(ms, msp),
-                     "Crecimiento Ventas": v - vp,
-                     "%Crecimiento Ventas": (v / vp - 1) if vp else 0})
-    return pd.DataFrame(rows).sort_values("Ventas", ascending=False).reset_index(drop=True)
+        rows.append({"Compañía": c, "Ventas": v, "Market Share": ms,
+                     "BPS": bps(ms, msp, has_prior),
+                     "Crecimiento Ventas": (v - vp) if has_prior else 0.0,
+                     "%Crecimiento Ventas": (v / vp - 1) if vp else 0.0})
+    df = pd.DataFrame(rows).sort_values("Ventas", ascending=False).reset_index(drop=True)
+    df.attrs["has_prior"] = has_prior
+    return df
 
 
 def breakdown_table(mkt_df, field_col, tipo, anchor):
     """Tabla por dimensión (Selector de Campo) con todas las métricas del período."""
     cur, prev = window(anchor, tipo, "current"), window(anchor, tipo, "prev")
+    has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
     rows = []
     for m in mkt_df[field_col].dropna().unique():
@@ -120,13 +130,15 @@ def breakdown_table(mkt_df, field_col, tipo, anchor):
         ms = v / tot_cur if tot_cur else 0
         msp = vp / tot_prev if tot_prev else 0
         rows.append({field_col: m, f"Ventas {tipo}": v, f"Ventas {tipo}-1": vp,
-                     f"Crecimiento {tipo}": v - vp,
-                     f"%Crecimiento {tipo}": (v / vp - 1) if vp else 0,
+                     f"Crecimiento {tipo}": (v - vp) if has_prior else 0.0,
+                     f"%Crecimiento {tipo}": (v / vp - 1) if vp else 0.0,
                      f"Market Share {tipo}": ms, f"Market Share {tipo}-1": msp,
-                     f"BPS {tipo}": bps(ms, msp),
+                     f"BPS {tipo}": bps(ms, msp, has_prior),
                      f"%Peso {tipo}": v / tot_cur if tot_cur else 0,
                      f"%Peso {tipo}-1": vp / tot_prev if tot_prev else 0})
-    return pd.DataFrame(rows).sort_values(f"Ventas {tipo}", ascending=False).reset_index(drop=True)
+    df = pd.DataFrame(rows).sort_values(f"Ventas {tipo}", ascending=False).reset_index(drop=True)
+    df.attrs["has_prior"] = has_prior
+    return df
 
 
 # --------------------------------------------------------------------------- #
@@ -145,9 +157,15 @@ def es_pct(v, dec=1):
     return f"{es_num(v * 100, dec)} %"
 
 
-def arrow(v):
+def arrow(v, has_prior=True):
+    # ▲ sube · ▼ baja · — sin variación (o sin comparativa cuando has_prior=False)
+    if not has_prior:
+        return "—"
     return "▲" if v > 0 else ("▼" if v < 0 else "—")
 
 
-def color(v):
-    return GREEN if v > 0 else (RED if v < 0 else "#888")
+def color(v, has_prior=True):
+    # verde sube · rojo baja · naranja sin variación · gris sin comparativa
+    if not has_prior:
+        return GRAY
+    return GREEN if v > 0 else (RED if v < 0 else ORANGE)

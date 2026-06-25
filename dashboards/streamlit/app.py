@@ -175,18 +175,24 @@ def page_vista():
     dif = v_cur - v_prev
     ms = C.market_share(comp, mkt, C.window(a, "MES", "current"))
     k = st.columns(5)
+    has6 = bool(C.window(a, "L6M", "prev"))   # ¿hay 6 meses anteriores con los que comparar?
     kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_mill(v_prev))
     kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_mill(v_cur))
+    tip6 = f"Últimos 6 meses {C.es_mill(v_cur)} vs 6 meses anteriores {C.es_mill(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
     kpi(k[2], "Variación Últimos 6 meses",
-        f"<span style='color:{C.color(dif)}'>{C.arrow(dif)} {C.es_mill(dif)}</span>",
-        f"<span style='color:{C.color(dif)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
+        f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_mill(dif)}</span>",
+        f"<span style='color:{C.color(dif, has6)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
     kpi(k[3], "Market Share Mes", C.es_pct(ms))
     bps_html = ""
-    for tp in ["MES", "YTD", "TAM"]:
+    for tp in ["MES", "L4M", "YTD", "TAM"]:
+        hasp = bool(C.window(a, tp, "prev"))
         msc = C.market_share(comp, mkt, C.window(a, tp, "current"))
         msp = C.market_share(comp, mkt, C.window(a, tp, "prev"))
-        b = C.bps(msc, msp)
-        bps_html += f"BPS {tp} <span style='color:{C.color(b)}'>{C.arrow(b)} {C.es_num(b)}</span><br>"
+        b = C.bps(msc, msp, hasp)
+        tipb = (f"Cuota actual {C.es_pct(msc)} vs anterior {C.es_pct(msp)}" if hasp
+                else "Sin período anterior con el que comparar")
+        bps_html += (f"BPS {tp} <span style='color:{C.color(b, hasp)}' title='{tipb}'>"
+                     f"{C.arrow(b, hasp)} {C.es_num(b)}</span><br>")
     kpi(k[4], "BPS", "", bps_html)
 
     st.write("")
@@ -204,7 +210,7 @@ def page_vista():
         return C.market_share(comp, mkt, C.window(a, tipo, var))
 
     g1, g2 = st.columns(2)
-    tipos = ["TAM", "YTD", "L4M", "MES"]
+    tipos = ["MES", "L4M", "YTD", "TAM"]
     fig = go.Figure()
     if metr == "BPS":
         fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.ACCENT)
@@ -236,23 +242,33 @@ def page_vista():
     h1.subheader("Performance del Mercado")
     tipo2 = h2.radio("Período", tipos, horizontal=True, index=1, label_visibility="collapsed", key="vg_perf")
     ct = C.company_table(mkt, tipo2, a)
+    has_prior = ct.attrs.get("has_prior", True)
     b1, b2 = st.columns([2, 3])
     top = ct.head(7).iloc[::-1]
     b1.markdown("**Top 7 en Ventas**")
-    # Verde si mejora o iguala al período anterior, rojo si cae. Usamos el crecimiento
-    # absoluto: si no hay período anterior con datos, el crecimiento es la venta entera
-    # (> 0) -> verde, asumiendo mejora al no haber comparativa (mismo criterio que Evidence).
+    # Color según comparación con el período anterior: verde sube · rojo baja · naranja sin
+    # variación · gris si no hay período anterior con el que comparar. Tooltip de 2 líneas:
+    # valor absoluto y variación vs período anterior.
+    cdata = [[f"Total: {C.es_mill(v)}",
+              (f"Var. vs ant.: {C.arrow(cr, has_prior)} {C.es_mill(cr)}" if has_prior
+               else "Sin período anterior")]
+             for v, cr in zip(top["Ventas"], top["Crecimiento Ventas"])]
     figb = go.Figure(go.Bar(x=top["Ventas"], y=top["Compañía"], orientation="h",
-                            marker_color=[C.GREEN if x >= 0 else C.RED for x in top["Crecimiento Ventas"]],
+                            marker_color=[C.color(cr, has_prior) for cr in top["Crecimiento Ventas"]],
                             text=[C.es_mill(v) for v in top["Ventas"]], textposition="outside",
-                            cliponaxis=False))
-    figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10))
+                            cliponaxis=False, customdata=cdata,
+                            hovertemplate="%{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
+    figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10),
+                       hoverlabel=dict(align="left"))
     b1.plotly_chart(figb, width="stretch")
     disp = ct.copy()
     sty = (disp.style
-           .format({"Ventas": C.es_num, "Market Share": C.es_pct, "BPS": lambda v: C.es_num(v),
-                    "Crecimiento Ventas": C.es_num, "%Crecimiento Ventas": C.es_pct})
-           .map(lambda v: f"color:{C.color(v)}", subset=["Crecimiento Ventas", "%Crecimiento Ventas", "BPS"]))
+           .format({"Ventas": C.es_num, "Market Share": C.es_pct,
+                    "BPS": lambda v: f"{C.arrow(v, has_prior)} {C.es_num(v)}",
+                    "Crecimiento Ventas": lambda v: f"{C.arrow(v, has_prior)} {C.es_num(v)}",
+                    "%Crecimiento Ventas": lambda v: f"{C.arrow(v, has_prior)} {C.es_pct(v)}"})
+           .map(lambda v: f"color:{C.color(v, has_prior)}",
+                subset=["Crecimiento Ventas", "%Crecimiento Ventas", "BPS"]))
     b2.dataframe(sty, width="stretch", height=300, hide_index=True)
 
 
@@ -267,14 +283,19 @@ def page_performance():
     topnav(); header("Análisis profundo del rendimiento")
     f = filtros()
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
-    col, tipo = _selector_campo_kpi(["TAM", "YTD", "L4M", "MES"])
+    col, tipo = _selector_campo_kpi(["MES", "L4M", "YTD", "TAM"])
     t = C.breakdown_table(mkt, col, tipo, f["anchor"])
+    has_prior = t.attrs.get("has_prior", True)
     pct = [c for c in t.columns if c.startswith("%") or "Market Share" in c]
-    num = [c for c in t.columns if c not in pct and c != col]
-    sty = (t.style
-           .format({**{c: C.es_num for c in num}, **{c: C.es_pct for c in pct}})
-           .map(lambda v: f"color:{C.color(v)}",
-                subset=[c for c in t.columns if "Crecimiento" in c or c.startswith("BPS")]))
+    comp_cols = [c for c in t.columns if "Crecimiento" in c or c.startswith("BPS")]
+    fmt = {}
+    for c in t.columns:
+        if c == col:
+            continue
+        base = C.es_pct if c in pct else C.es_num
+        fmt[c] = (lambda v, b=base: f"{C.arrow(v, has_prior)} {b(v)}") if c in comp_cols else base
+    sty = (t.style.format(fmt)
+           .map(lambda v: f"color:{C.color(v, has_prior)}", subset=comp_cols))
     st.dataframe(sty, width="stretch", height=480, hide_index=True)
 
 
@@ -328,21 +349,29 @@ def page_segmento():
                          max_selections=4, key="seg_sel")
     cols = st.columns(max(1, len(sel)))
     cur, prev = C.window(f["anchor"], tipo, "current"), C.window(f["anchor"], tipo, "prev")
+    has_prior = bool(prev)
     tot_c, tot_p = C.ventas(mkt, cur), C.ventas(mkt, prev)
     for col, name in zip(cols, sel):
         gd = mkt[mkt["Category"] == name]
         vc, vp = C.ventas(gd, cur), C.ventas(gd, prev)
         msc = vc / tot_c if tot_c else 0
         msp = vp / tot_p if tot_p else 0
-        b = C.bps(msc, msp)
+        b = C.bps(msc, msp, has_prior)
         g = (vc / vp - 1) if vp else 0
-        # barra del período actual en verde/rojo según supere o no al anterior
+        dif = vc - vp
+        var_txt = (f"Var. vs ant.: {C.arrow(dif, has_prior)} {C.es_mill(dif)}" if has_prior
+                   else "Sin período anterior")
+        # barra del período actual en verde/rojo/naranja/gris según comparación con el anterior
         fig = go.Figure(go.Bar(x=[f"{tipo}-1", tipo], y=[vp, vc],
-                               marker_color=[C.ACCENT, C.color(vc - vp)]))
-        fig.update_layout(height=185, margin=dict(l=6, r=6, t=30, b=6), title=name, showlegend=False)
+                               marker_color=[C.ACCENT, C.color(dif, has_prior)],
+                               customdata=[[f"Total: {C.es_mill(vp)}", ""],
+                                           [f"Total: {C.es_mill(vc)}", var_txt]],
+                               hovertemplate="%{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
+        fig.update_layout(height=185, margin=dict(l=6, r=6, t=30, b=6), title=name,
+                          showlegend=False, hoverlabel=dict(align="left"))
         col.plotly_chart(fig, width="stretch")
-        col.markdown(f"**BPS:** <span style='color:{C.color(b)}'>{C.arrow(b)} {C.es_num(b)}</span> · "
-                     f"**%Crec.:** <span style='color:{C.color(g)}'>{C.es_pct(g)}</span>",
+        col.markdown(f"**BPS:** <span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span> · "
+                     f"**%Crec.:** <span style='color:{C.color(g, has_prior)}'>{C.arrow(g, has_prior)} {C.es_pct(g)}</span>",
                      unsafe_allow_html=True)
 
 
@@ -365,7 +394,7 @@ def page_dinamico():
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
     c1, c2 = st.columns(2)
     dims = c1.multiselect("Campos (filas)", list(C.FIELDS.keys()), default=["Compañía", "Categoría"])
-    tipo = c2.radio("Período", ["TAM", "YTD", "L4M", "MES"], horizontal=True, key="dn_t")
+    tipo = c2.radio("Período", ["MES", "L4M", "YTD", "TAM"], horizontal=True, key="dn_t")
     if not dims:
         st.info("Elige al menos un campo."); return
     cols = [C.FIELDS[d] for d in dims]
