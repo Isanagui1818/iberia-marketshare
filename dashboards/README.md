@@ -1,4 +1,4 @@
-<p align="center"><em>Actualmente solo está operativo el dashboard de Streamlit. Los dashboards de Evidence y Looker Studio están todavía pendientes de desarrollar.</em></p>
+<p align="center"><em>Only the Streamlit dashboard is currently operational. The Evidence and Looker Studio dashboards are still pending development.</em></p>
 
 ## Quick start
 

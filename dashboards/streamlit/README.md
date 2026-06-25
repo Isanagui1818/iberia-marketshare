@@ -1,4 +1,4 @@
-<p align="center"><em>Esta es una versión preliminar que se irá mejorando. La estructura ya está terminada, pero faltan mejoras estéticas.</em></p>
+<p align="center"><em>This is a preliminary version that will keep being improved. The structure is already complete, but aesthetic improvements are still pending.</em></p>
 
 # Streamlit dashboard — Market Data SN
 
