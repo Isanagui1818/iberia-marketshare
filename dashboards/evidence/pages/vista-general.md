@@ -7,18 +7,34 @@ sidebar_position: 2
 select distinct metric from marketshare.fact_full order by 1
 ```
 
-```sql periodos
-select period_id, period_name from marketshare.periods order by period_id desc
-```
-
 ```sql companias
 select distinct manufacturer from marketshare.fact_full
 where manufacturer is not null order by 1
 ```
 
 <Dropdown data={metricas}  name=metrica  value=metric        title="Métrica"  defaultValue="Valor €" />
-<Dropdown data={periodos}  name=anchor   value=period_id label=period_name title="Período" defaultValue={202412} />
 <Dropdown data={companias} name=compania value=manufacturer  title="Compañía" defaultValue="Compañía SN" />
+
+<ButtonGroup name=anio title="Año">
+    <ButtonGroupItem valueLabel="2022" value="2022" />
+    <ButtonGroupItem valueLabel="2023" value="2023" />
+    <ButtonGroupItem valueLabel="2024" value="2024" defaultValue="2024" />
+</ButtonGroup>
+
+<ButtonGroup name=mes title="Mes">
+    <ButtonGroupItem valueLabel="Ene" value="1" />
+    <ButtonGroupItem valueLabel="Feb" value="2" />
+    <ButtonGroupItem valueLabel="Mar" value="3" />
+    <ButtonGroupItem valueLabel="Abr" value="4" />
+    <ButtonGroupItem valueLabel="May" value="5" />
+    <ButtonGroupItem valueLabel="Jun" value="6" />
+    <ButtonGroupItem valueLabel="Jul" value="7" />
+    <ButtonGroupItem valueLabel="Ago" value="8" />
+    <ButtonGroupItem valueLabel="Sep" value="9" />
+    <ButtonGroupItem valueLabel="Oct" value="10" />
+    <ButtonGroupItem valueLabel="Nov" value="11" />
+    <ButtonGroupItem valueLabel="Dic" value="12" defaultValue="12" />
+</ButtonGroup>
 
 <ButtonGroup name=win title="Ventana de período">
     <ButtonGroupItem valueLabel="MES" value="MES" />
@@ -44,9 +60,9 @@ with base as (
         end as bucket
     from marketshare.fact_full f
     cross join (
-        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
-               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+        select cast('${inputs.anio}' as integer) as ayear,
+               cast('${inputs.anio}' as integer) * 12
+                 + cast('${inputs.mes}' as integer) as aidx
     ) a
     where f.metric = '${inputs.metrica.value}'
 ),
@@ -77,16 +93,14 @@ from m
 ## Incremento vs período anterior — evolución mensual
 
 ```sql vg_evol
-select month_number, month_long as mes, 'Año actual' as serie, sum(value) as ventas
+select
+    month_number,
+    month_long as mes,
+    sum(value) filter (where year = cast('${inputs.anio}' as integer))     as "Año actual",
+    sum(value) filter (where year = cast('${inputs.anio}' as integer) - 1) as "Año anterior"
 from marketshare.fact_full
 where metric = '${inputs.metrica.value}' and manufacturer = '${inputs.compania.value}'
-  and year = cast(substr('${inputs.anchor.value}', 1, 4) as integer)
-group by 1, 2
-union all
-select month_number, month_long as mes, 'Año anterior' as serie, sum(value) as ventas
-from marketshare.fact_full
-where metric = '${inputs.metrica.value}' and manufacturer = '${inputs.compania.value}'
-  and year = cast(substr('${inputs.anchor.value}', 1, 4) as integer) - 1
+  and year in (cast('${inputs.anio}' as integer), cast('${inputs.anio}' as integer) - 1)
 group by 1, 2
 order by 1
 ```
@@ -94,11 +108,10 @@ order by 1
 <BarChart
     data={vg_evol}
     x=mes
-    y=ventas
-    series=serie
+    y={['Año actual', 'Año anterior']}
     type=grouped
     sort=false
-    seriesColors={{'Año actual': '#002060', 'Año anterior': '#00ACED'}}
+    colorPalette={['#002060', '#00ACED']}
     yAxisTitle="Ventas"
 />
 
@@ -119,9 +132,9 @@ with base as (
         end as bucket
     from marketshare.fact_full f
     cross join (
-        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
-               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+        select cast('${inputs.anio}' as integer) as ayear,
+               cast('${inputs.anio}' as integer) * 12
+                 + cast('${inputs.mes}' as integer) as aidx
     ) a
     where f.metric = '${inputs.metrica.value}'
 ),
@@ -155,9 +168,9 @@ with base as (
         end as bucket
     from marketshare.fact_full f
     cross join (
-        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
-               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+        select cast('${inputs.anio}' as integer) as ayear,
+               cast('${inputs.anio}' as integer) * 12
+                 + cast('${inputs.mes}' as integer) as aidx
     ) a
     where f.metric = '${inputs.metrica.value}'
 ),
@@ -174,8 +187,8 @@ agg as (
 select
     compania,
     ventas,
-    case when ventas - ventas_prev >= 0 then ventas end as "Mejora vs anterior",
-    case when ventas - ventas_prev <  0 then ventas end as "Empeora vs anterior"
+    case when ventas - coalesce(ventas_prev, 0) >= 0 then ventas end as "Mejora vs anterior",
+    case when ventas - coalesce(ventas_prev, 0) <  0 then ventas end as "Empeora vs anterior"
 from agg
 order by ventas desc
 limit 7

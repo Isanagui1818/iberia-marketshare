@@ -10,12 +10,28 @@ elegida y **expórtala** (botón de descarga de la tabla → CSV).
 select distinct metric from marketshare.fact_full order by 1
 ```
 
-```sql periodos
-select period_id, period_name from marketshare.periods order by period_id desc
-```
-
 <Dropdown data={metricas} name=metrica value=metric label=metric title="Métrica" defaultValue="Valor €" />
-<Dropdown data={periodos} name=anchor  value=period_id label=period_name title="Período" defaultValue={202412} />
+
+<ButtonGroup name=anio title="Año">
+    <ButtonGroupItem valueLabel="2022" value="2022" />
+    <ButtonGroupItem valueLabel="2023" value="2023" />
+    <ButtonGroupItem valueLabel="2024" value="2024" defaultValue="2024" />
+</ButtonGroup>
+
+<ButtonGroup name=mes title="Mes">
+    <ButtonGroupItem valueLabel="Ene" value="1" />
+    <ButtonGroupItem valueLabel="Feb" value="2" />
+    <ButtonGroupItem valueLabel="Mar" value="3" />
+    <ButtonGroupItem valueLabel="Abr" value="4" />
+    <ButtonGroupItem valueLabel="May" value="5" />
+    <ButtonGroupItem valueLabel="Jun" value="6" />
+    <ButtonGroupItem valueLabel="Jul" value="7" />
+    <ButtonGroupItem valueLabel="Ago" value="8" />
+    <ButtonGroupItem valueLabel="Sep" value="9" />
+    <ButtonGroupItem valueLabel="Oct" value="10" />
+    <ButtonGroupItem valueLabel="Nov" value="11" />
+    <ButtonGroupItem valueLabel="Dic" value="12" defaultValue="12" />
+</ButtonGroup>
 
 <Dropdown name=dim1 title="Campo 1 (filas)" defaultValue="manufacturer">
     <DropdownOption valueLabel="Compañía"     value="manufacturer" />
@@ -49,9 +65,9 @@ select period_id, period_name from marketshare.periods order by period_id desc
 ```sql dinamico
 with p as (
     select
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer)                     as ayear,
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-          + cast(substr('${inputs.anchor.value}', 5, 2) as integer)                 as aidx
+        cast('${inputs.anio}' as integer)                     as ayear,
+        cast('${inputs.anio}' as integer) * 12
+          + cast('${inputs.mes}' as integer)                 as aidx
 ),
 base as (
     select f.*
