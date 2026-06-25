@@ -1,62 +1,39 @@
 ---
-title: Iberia Market-Share
+title: Market Data SN
 ---
 
-Cuota de mercado multi-país sobre **datos 100% sintéticos** — versión _BI-as-code_ (SQL +
-Markdown) del informe Power BI. Todo lo que ves se genera desde consultas SQL.
+_Versión **BI-as-code** (SQL + Markdown) del informe Power BI, sobre **datos 100 %
+sintéticos y anonimizados**. Cada cifra, tabla y gráfico de este sitio se genera desde
+consultas SQL — la documentación **es** el código._
 
-```sql metricas
-select distinct metric from marketshare.fact_full order by 1
+```sql ultimo_periodo
+select max(period_name) as periodo, count(*) as periodos_cargados
+from marketshare.periods
 ```
 
-<Dropdown data={metricas} name=metrica value=metric title="Métrica" defaultValue="Valor €"/>
+<BigValue data={ultimo_periodo} value=periodo title="Último período cargado"/>
+<BigValue data={ultimo_periodo} value=periodos_cargados title="Períodos cargados"/>
 
-```sql kpis
-select
-    sum(value)                                   as ventas_total,
-    count(distinct product)                      as productos,
-    count(distinct manufacturer)                 as fabricantes
-from marketshare.fact_full
-where metric = '${inputs.metrica.value}'
-```
+## El informe
 
-<BigValue data={kpis} value=ventas_total title="Ventas (total)" fmt="#,##0"/>
-<BigValue data={kpis} value=productos title="Productos"/>
-<BigValue data={kpis} value=fabricantes title="Fabricantes"/>
+Análisis de **cuota de mercado** de la industria de nutrición especializada (FMCG) en
+**España y Portugal**. Mide ventas, market share, crecimiento y participación (%Peso) por
+compañía, categoría, canal, marca y producto, en distintos horizontes temporales —
+**MES, L4M, YTD y TAM** — con comparativas frente al período anterior y al mismo período
+del año anterior.
 
-## Evolución mensual
+## Páginas
 
-```sql evolucion
-select period_id::varchar as periodo, sum(value) as ventas
-from marketshare.fact_full
-where metric = '${inputs.metrica.value}'
-group by 1 order by 1
-```
+- **[Glosario](/glosario)** — definiciones de las medidas y los períodos.
+- **[Vista General](/vista-general)** — KPIs de la compañía, incremento vs período anterior y performance del mercado (Top 7).
+- **[Performance](/performance)** — tabla completa de métricas por dimensión (selector de campo).
+- **[Evolución](/evolucion)** — series temporales por dimensión (Ventas / Market Share).
+- **[Segmento de Mercado](/segmento)** — comparación de categorías L4M / L3M.
+- **[Birth Rate](/birth-rate)** — serie de contexto (tasa de natalidad).
+- **[Informe Dinámico](/informe-dinamico)** — construye una tabla por dimensiones y expórtala.
 
-<LineChart data={evolucion} x=periodo y=ventas yAxisTitle="Ventas" markers=true/>
+---
 
-## Ranking por fabricante (cuota %)
-
-```sql ranking
-select manufacturer,
-       sum(value) as ventas,
-       sum(value) / sum(sum(value)) over () as cuota
-from marketshare.fact_full
-where metric = '${inputs.metrica.value}'
-group by 1 order by ventas desc
-```
-
-<BarChart data={ranking} x=manufacturer y=ventas swapXY=true/>
-<DataTable data={ranking}>
-  <Column id=manufacturer title="Fabricante"/>
-  <Column id=ventas title="Ventas" fmt="#,##0"/>
-  <Column id=cuota title="Cuota" fmt="0.0%"/>
-</DataTable>
-
-## Contexto — tasa de natalidad
-
-```sql natalidad
-select period_id::varchar as periodo, birth_rate from marketshare.birth_rate
-```
-
-<LineChart data={natalidad} x=periodo y=birth_rate yAxisTitle="Tasa (‰)"/>
+_Modelo replicado del informe Power BI: framework de período `_AuxPeriod`
+(MES/L4M/YTD/TAM con variantes `-1`/`LY`), Market Share = cuota dentro del fabricante,
+BPS = Δ cuota × 10 000, %Peso = peso del segmento sobre el total._
