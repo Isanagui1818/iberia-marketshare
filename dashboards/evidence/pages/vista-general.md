@@ -98,7 +98,7 @@ order by 1
     series=serie
     type=grouped
     sort=false
-    colorPalette={['#0A2A66', '#1467BC']}
+    seriesColors={{'Año actual': '#002060', 'Año anterior': '#00ACED'}}
     yAxisTitle="Ventas"
 />
 
@@ -142,26 +142,54 @@ order by ventas desc
 
 ```sql vg_top7
 with base as (
-    select f.value, f.manufacturer, f.pidx, f.year,
-        (select cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-              + cast(substr('${inputs.anchor.value}', 5, 2) as integer)) as aidx
+    select f.value, f.manufacturer,
+        case
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx                             then 'cur'
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx - 1                         then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx        then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4    then 'prev'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 11 and a.aidx        then 'cur'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 23 and a.aidx - 12   then 'prev'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear     and f.pidx <= a.aidx       then 'cur'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear - 1 and f.pidx <= a.aidx - 12  then 'prev'
+        end as bucket
     from marketshare.fact_full f
+    cross join (
+        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
+               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
+                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+    ) a
     where f.metric = '${inputs.metrica.value}'
+),
+agg as (
+    select
+        manufacturer as compania,
+        sum(value) filter (where bucket = 'cur')  as ventas,
+        sum(value) filter (where bucket = 'prev') as ventas_prev
+    from base
+    where bucket is not null
+    group by 1
+    having sum(value) filter (where bucket = 'cur') > 0
 )
-select manufacturer as compania, sum(value) as ventas
-from base
-where
-    ('${inputs.win}' = 'MES' and pidx = aidx)
-    or ('${inputs.win}' = 'L4M' and pidx between aidx - 3  and aidx)
-    or ('${inputs.win}' = 'TAM' and pidx between aidx - 11 and aidx)
-    or ('${inputs.win}' = 'YTD' and year = cast(substr('${inputs.anchor.value}', 1, 4) as integer) and pidx <= aidx)
-group by 1
-having sum(value) > 0
+select
+    compania,
+    ventas,
+    case when ventas - ventas_prev >= 0 then ventas end as "Mejora vs anterior",
+    case when ventas - ventas_prev <  0 then ventas end as "Empeora vs anterior"
+from agg
 order by ventas desc
 limit 7
 ```
 
-<BarChart data={vg_top7} x=compania y=ventas swapXY=true colorPalette={['#0A2A66']} yAxisTitle="Ventas" />
+<BarChart
+    data={vg_top7}
+    x=compania
+    y={['Mejora vs anterior', 'Empeora vs anterior']}
+    swapXY=true
+    type=stacked
+    colorPalette={['#2E9E5B', '#D23B3B']}
+    yAxisTitle="Ventas"
+/>
 
 <DataTable data={vg_rank} rows=10>
     <Column id=compania     title="Compañía" />
