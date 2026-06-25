@@ -14,7 +14,7 @@ dashboard locally** on your own machine.
 
 ## Quick start (run locally)
 
-- **Streamlit** — `cd streamlit && pip install -r requirements.txt && streamlit run app.py`
+- **Streamlit** — `cd streamlit && pip install -r requirements.txt && python -m streamlit run app.py` · details in [`streamlit/README.md`](streamlit/README.md#run-locally)
 - **Evidence** — see [`evidence/README.md`](evidence/README.md) (needs Node 18+)
 - **Looker Studio** — follow [`looker-studio/README.md`](looker-studio/README.md)
 
