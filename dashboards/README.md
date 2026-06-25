@@ -1,3 +1,5 @@
+<p align="center"><em>Actualmente solo está operativo el dashboard de Streamlit. Los dashboards de Evidence y Looker Studio están todavía pendientes de desarrollar.</em></p>
+
 ## Quick start
 
 - **Streamlit** — `cd streamlit && pip install -r requirements.txt && streamlit run app.py`

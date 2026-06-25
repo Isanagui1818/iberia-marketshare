@@ -1,3 +1,5 @@
+<p align="center"><em>Esta es una versión preliminar que se irá mejorando. La estructura ya está terminada, pero faltan mejoras estéticas.</em></p>
+
 # Streamlit dashboard — Market Data SN
 
 Multi-page Python replica of the Power BI report, in Spanish, on the synthetic data.
