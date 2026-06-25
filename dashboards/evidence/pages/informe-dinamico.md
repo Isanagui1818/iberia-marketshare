@@ -1,5 +1,6 @@
 ---
 title: Informe Dinámico
+sidebar_position: 7
 ---
 
 Construye una tabla agregada por **una o dos dimensiones** en la ventana de período
@@ -14,7 +15,7 @@ select period_id, period_name from marketshare.periods order by period_id desc
 ```
 
 <Dropdown data={metricas} name=metrica value=metric label=metric title="Métrica" defaultValue="Valor €" />
-<Dropdown data={periodos} name=anchor  value=period_id label=period_name title="Período" defaultValue="202412" />
+<Dropdown data={periodos} name=anchor  value=period_id label=period_name title="Período" defaultValue={202412} />
 
 <Dropdown name=dim1 title="Campo 1 (filas)" defaultValue="manufacturer">
     <DropdownOption valueLabel="Compañía"     value="manufacturer" />
@@ -38,9 +39,9 @@ select period_id, period_name from marketshare.periods order by period_id desc
     <DropdownOption valueLabel="Market"       value="market" />
 </Dropdown>
 
-<ButtonGroup name=win title="Ventana de período" defaultValue="L4M">
+<ButtonGroup name=win title="Ventana de período">
     <ButtonGroupItem valueLabel="MES" value="MES" />
-    <ButtonGroupItem valueLabel="L4M" value="L4M" />
+    <ButtonGroupItem valueLabel="L4M" value="L4M" defaultValue="L4M" />
     <ButtonGroupItem valueLabel="YTD" value="YTD" />
     <ButtonGroupItem valueLabel="TAM" value="TAM" />
 </ButtonGroup>
@@ -58,21 +59,21 @@ base as (
     cross join p
     where f.metric = '${inputs.metrica.value}'
       and (
-        ('${inputs.win.value}' = 'MES' and f.pidx = p.aidx)
-        or ('${inputs.win.value}' = 'L4M' and f.pidx between p.aidx - 3  and p.aidx)
-        or ('${inputs.win.value}' = 'TAM' and f.pidx between p.aidx - 11 and p.aidx)
-        or ('${inputs.win.value}' = 'YTD' and f.year = p.ayear and f.pidx <= p.aidx)
+        ('${inputs.win}' = 'MES' and f.pidx = p.aidx)
+        or ('${inputs.win}' = 'L4M' and f.pidx between p.aidx - 3  and p.aidx)
+        or ('${inputs.win}' = 'TAM' and f.pidx between p.aidx - 11 and p.aidx)
+        or ('${inputs.win}' = 'YTD' and f.year = p.ayear and f.pidx <= p.aidx)
       )
 )
 select
     ${inputs.dim1.value} as dimension_1,
     ${inputs.dim2.value} as dimension_2,
-    sum(value)           as "Ventas ${inputs.win.value}"
+    sum(value)           as "Ventas ${inputs.win}"
 from base
 group by 1, 2
 order by 3 desc
 ```
 
-## Resultado — {inputs.win.value} · {inputs.metrica.value}
+## Resultado — {inputs.win} · {inputs.metrica.value}
 
 <DataTable data={dinamico} rows=25 search=true totalRow=true downloadable=true />

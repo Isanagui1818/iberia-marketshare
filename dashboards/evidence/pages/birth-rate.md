@@ -1,5 +1,6 @@
 ---
 title: Birth Rate
+sidebar_position: 6
 ---
 
 Serie de **contexto** del informe: tasa de natalidad (‰) por período. No interviene en las

@@ -1,5 +1,6 @@
 ---
 title: Vista General
+sidebar_position: 2
 ---
 
 ```sql metricas
@@ -16,54 +17,46 @@ where manufacturer is not null order by 1
 ```
 
 <Dropdown data={metricas}  name=metrica  value=metric        title="Métrica"  defaultValue="Valor €" />
-<Dropdown data={periodos}  name=anchor   value=period_id label=period_name title="Período" defaultValue="202412" />
+<Dropdown data={periodos}  name=anchor   value=period_id label=period_name title="Período" defaultValue={202412} />
 <Dropdown data={companias} name=compania value=manufacturer  title="Compañía" defaultValue="Compañía SN" />
 
-<ButtonGroup name=win title="Ventana de período" defaultValue="L4M">
+<ButtonGroup name=win title="Ventana de período">
     <ButtonGroupItem valueLabel="MES" value="MES" />
-    <ButtonGroupItem valueLabel="L4M" value="L4M" />
+    <ButtonGroupItem valueLabel="L4M" value="L4M" defaultValue="L4M" />
     <ButtonGroupItem valueLabel="YTD" value="YTD" />
     <ButtonGroupItem valueLabel="TAM" value="TAM" />
 </ButtonGroup>
 
-<!-- Base reactiva: etiqueta cada fila como 'cur' / 'prev' según la ventana elegida.
-     aidx = índice de mes continuo del período ancla (año*12 + mes), calculado con substr
-     para no depender de la división entera. -->
-
-```sql vg_base
-with p as (
-    select
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer)                                            as ayear,
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-          + cast(substr('${inputs.anchor.value}', 5, 2) as integer)                                        as aidx
-)
-select
-    f.*,
-    case
-        when '${inputs.win.value}' = 'MES' and f.pidx = p.aidx                              then 'cur'
-        when '${inputs.win.value}' = 'MES' and f.pidx = p.aidx - 1                          then 'prev'
-        when '${inputs.win.value}' = 'L4M' and f.pidx between p.aidx - 3  and p.aidx        then 'cur'
-        when '${inputs.win.value}' = 'L4M' and f.pidx between p.aidx - 7  and p.aidx - 4    then 'prev'
-        when '${inputs.win.value}' = 'TAM' and f.pidx between p.aidx - 11 and p.aidx        then 'cur'
-        when '${inputs.win.value}' = 'TAM' and f.pidx between p.aidx - 23 and p.aidx - 12   then 'prev'
-        when '${inputs.win.value}' = 'YTD' and f.year = p.ayear     and f.pidx <= p.aidx       then 'cur'
-        when '${inputs.win.value}' = 'YTD' and f.year = p.ayear - 1 and f.pidx <= p.aidx - 12  then 'prev'
-    end as bucket
-from marketshare.fact_full f
-cross join p
-where f.metric = '${inputs.metrica.value}'
-```
-
-## KPIs — {inputs.compania.value} · {inputs.win.value}
+## KPIs — {inputs.compania.value} · {inputs.win}
 
 ```sql vg_kpis
-with m as (
+with base as (
+    select f.value, f.manufacturer,
+        case
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx                             then 'cur'
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx - 1                         then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx        then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4    then 'prev'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 11 and a.aidx        then 'cur'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 23 and a.aidx - 12   then 'prev'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear     and f.pidx <= a.aidx       then 'cur'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear - 1 and f.pidx <= a.aidx - 12  then 'prev'
+        end as bucket
+    from marketshare.fact_full f
+    cross join (
+        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
+               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
+                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+    ) a
+    where f.metric = '${inputs.metrica.value}'
+),
+m as (
     select
         sum(value) filter (where bucket = 'cur')                                          as mkt_cur,
         sum(value) filter (where bucket = 'prev')                                         as mkt_prev,
         sum(value) filter (where bucket = 'cur'  and manufacturer = '${inputs.compania.value}') as comp_cur,
         sum(value) filter (where bucket = 'prev' and manufacturer = '${inputs.compania.value}') as comp_prev
-    from vg_base
+    from base
     where bucket is not null
 )
 select
@@ -112,15 +105,35 @@ order by 1
 ## Performance del mercado — Top 7
 
 ```sql vg_rank
+with base as (
+    select f.value, f.manufacturer,
+        case
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx                             then 'cur'
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx - 1                         then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx        then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4    then 'prev'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 11 and a.aidx        then 'cur'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 23 and a.aidx - 12   then 'prev'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear     and f.pidx <= a.aidx       then 'cur'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear - 1 and f.pidx <= a.aidx - 12  then 'prev'
+        end as bucket
+    from marketshare.fact_full f
+    cross join (
+        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
+               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
+                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+    ) a
+    where f.metric = '${inputs.metrica.value}'
+),
+tot as (select sum(value) filter (where bucket = 'cur') as mkt_cur from base)
 select
     manufacturer as compania,
     sum(value) filter (where bucket = 'cur')  as ventas,
     sum(value) filter (where bucket = 'cur') - sum(value) filter (where bucket = 'prev') as crecimiento,
     case when sum(value) filter (where bucket = 'prev') = 0 then null
          else sum(value) filter (where bucket = 'cur') / sum(value) filter (where bucket = 'prev') - 1 end as pct_crec,
-    sum(value) filter (where bucket = 'cur')
-        / (select sum(value) filter (where bucket = 'cur') from vg_base where bucket is not null) as market_share
-from vg_base
+    sum(value) filter (where bucket = 'cur') / (select mkt_cur from tot) as market_share
+from base
 where bucket is not null
 group by 1
 having sum(value) filter (where bucket = 'cur') > 0
@@ -128,7 +141,24 @@ order by ventas desc
 ```
 
 ```sql vg_top7
-select * from vg_rank limit 7
+with base as (
+    select f.value, f.manufacturer, f.pidx, f.year,
+        (select cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
+              + cast(substr('${inputs.anchor.value}', 5, 2) as integer)) as aidx
+    from marketshare.fact_full f
+    where f.metric = '${inputs.metrica.value}'
+)
+select manufacturer as compania, sum(value) as ventas
+from base
+where
+    ('${inputs.win}' = 'MES' and pidx = aidx)
+    or ('${inputs.win}' = 'L4M' and pidx between aidx - 3  and aidx)
+    or ('${inputs.win}' = 'TAM' and pidx between aidx - 11 and aidx)
+    or ('${inputs.win}' = 'YTD' and year = cast(substr('${inputs.anchor.value}', 1, 4) as integer) and pidx <= aidx)
+group by 1
+having sum(value) > 0
+order by ventas desc
+limit 7
 ```
 
 <BarChart data={vg_top7} x=compania y=ventas swapXY=true colorPalette={['#0A2A66']} yAxisTitle="Ventas" />

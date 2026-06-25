@@ -1,5 +1,6 @@
 ---
 title: Evolución
+sidebar_position: 4
 ---
 
 Evolución temporal por **dimensión**: top 6 miembros a lo largo de todos los períodos
@@ -25,22 +26,21 @@ select distinct metric from marketshare.fact_full order by 1
     <DropdownOption valueLabel="Market"          value="market" />
 </Dropdown>
 
-<ButtonGroup name=kpi title="KPI" defaultValue="ventas">
-    <ButtonGroupItem valueLabel="Ventas"       value="ventas" />
+<ButtonGroup name=kpi title="KPI">
+    <ButtonGroupItem valueLabel="Ventas"       value="ventas" defaultValue="ventas" />
     <ButtonGroupItem valueLabel="Market Share" value="cuota" />
 </ButtonGroup>
 
-```sql ev_top
-select ${inputs.campo.value} as dimension, sum(value) as tot
-from marketshare.fact_full
-where metric = '${inputs.metrica.value}' and ${inputs.campo.value} is not null
-group by 1
-order by tot desc
-limit 6
-```
-
 ```sql ev_series
-with mkt as (
+with ev_top as (
+    select ${inputs.campo.value} as dimension, sum(value) as tot
+    from marketshare.fact_full
+    where metric = '${inputs.metrica.value}' and ${inputs.campo.value} is not null
+    group by 1
+    order by tot desc
+    limit 6
+),
+mkt as (
     select period_id, sum(value) as market
     from marketshare.fact_full
     where metric = '${inputs.metrica.value}'
@@ -60,16 +60,16 @@ group by 1, 2, 3
 order by 1
 ```
 
-## Evolución por {inputs.campo.value} — {inputs.kpi.value}
+## Evolución por {inputs.campo.value} — {inputs.kpi}
 
 <LineChart
     data={ev_series}
     x=period_name
-    y={inputs.kpi.value}
+    y={inputs.kpi}
     series=dimension
     markers=true
-    yAxisTitle={inputs.kpi.value}
-    yFmt={inputs.kpi.value === 'cuota' ? '0.0%' : '#,##0'}
+    yAxisTitle={inputs.kpi}
+    yFmt={inputs.kpi === 'cuota' ? '0.0%' : '#,##0'}
 />
 
 <DataTable data={ev_series} rows=12 search=true>

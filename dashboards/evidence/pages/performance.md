@@ -1,5 +1,6 @@
 ---
 title: Performance
+sidebar_position: 3
 ---
 
 Análisis profundo del rendimiento: todas las métricas del período por la **dimensión**
@@ -14,7 +15,7 @@ select period_id, period_name from marketshare.periods order by period_id desc
 ```
 
 <Dropdown data={metricas} name=metrica value=metric label=metric title="Métrica" defaultValue="Valor €" />
-<Dropdown data={periodos} name=anchor  value=period_id label=period_name title="Período" defaultValue="202412" />
+<Dropdown data={periodos} name=anchor  value=period_id label=period_name title="Período" defaultValue={202412} />
 
 <Dropdown name=campo title="Selector de Campo" defaultValue="manufacturer">
     <DropdownOption valueLabel="Área de Negocio" value="business_area" />
@@ -32,50 +33,46 @@ select period_id, period_name from marketshare.periods order by period_id desc
     <DropdownOption valueLabel="Etapa"           value="etapas" />
 </Dropdown>
 
-<ButtonGroup name=win title="Ventana de período" defaultValue="L4M">
+<ButtonGroup name=win title="Ventana de período">
     <ButtonGroupItem valueLabel="MES" value="MES" />
-    <ButtonGroupItem valueLabel="L4M" value="L4M" />
+    <ButtonGroupItem valueLabel="L4M" value="L4M" defaultValue="L4M" />
     <ButtonGroupItem valueLabel="YTD" value="YTD" />
     <ButtonGroupItem valueLabel="TAM" value="TAM" />
 </ButtonGroup>
 
-```sql perf_base
-with p as (
-    select
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer)                     as ayear,
-        cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
-          + cast(substr('${inputs.anchor.value}', 5, 2) as integer)                 as aidx
-)
-select
-    f.*,
-    case
-        when '${inputs.win.value}' = 'MES' and f.pidx = p.aidx                            then 'cur'
-        when '${inputs.win.value}' = 'MES' and f.pidx = p.aidx - 1                        then 'prev'
-        when '${inputs.win.value}' = 'L4M' and f.pidx between p.aidx - 3  and p.aidx      then 'cur'
-        when '${inputs.win.value}' = 'L4M' and f.pidx between p.aidx - 7  and p.aidx - 4  then 'prev'
-        when '${inputs.win.value}' = 'TAM' and f.pidx between p.aidx - 11 and p.aidx      then 'cur'
-        when '${inputs.win.value}' = 'TAM' and f.pidx between p.aidx - 23 and p.aidx - 12 then 'prev'
-        when '${inputs.win.value}' = 'YTD' and f.year = p.ayear     and f.pidx <= p.aidx       then 'cur'
-        when '${inputs.win.value}' = 'YTD' and f.year = p.ayear - 1 and f.pidx <= p.aidx - 12  then 'prev'
-    end as bucket
-from marketshare.fact_full f
-cross join p
-where f.metric = '${inputs.metrica.value}'
-```
-
-## {inputs.win.value} · {inputs.metrica.value}
+## {inputs.win} · {inputs.metrica.value}
 
 ```sql perf
+with base as (
+    select f.value, ${inputs.campo.value} as dimension,
+        case
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx                            then 'cur'
+            when '${inputs.win}' = 'MES' and f.pidx = a.aidx - 1                        then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx      then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4  then 'prev'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 11 and a.aidx      then 'cur'
+            when '${inputs.win}' = 'TAM' and f.pidx between a.aidx - 23 and a.aidx - 12 then 'prev'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear     and f.pidx <= a.aidx       then 'cur'
+            when '${inputs.win}' = 'YTD' and f.year = a.ayear - 1 and f.pidx <= a.aidx - 12  then 'prev'
+        end as bucket
+    from marketshare.fact_full f
+    cross join (
+        select cast(substr('${inputs.anchor.value}', 1, 4) as integer) as ayear,
+               cast(substr('${inputs.anchor.value}', 1, 4) as integer) * 12
+                 + cast(substr('${inputs.anchor.value}', 5, 2) as integer) as aidx
+    ) a
+    where f.metric = '${inputs.metrica.value}'
+),
+tot as (select sum(value) filter (where bucket = 'cur') as mkt_cur from base)
 select
-    ${inputs.campo.value} as dimension,
+    dimension,
     sum(value) filter (where bucket = 'cur')  as ventas,
     sum(value) filter (where bucket = 'prev') as ventas_prev,
     sum(value) filter (where bucket = 'cur') - sum(value) filter (where bucket = 'prev') as crecimiento,
     case when sum(value) filter (where bucket = 'prev') = 0 then null
          else sum(value) filter (where bucket = 'cur') / sum(value) filter (where bucket = 'prev') - 1 end as pct_crec,
-    sum(value) filter (where bucket = 'cur')
-        / (select sum(value) filter (where bucket = 'cur') from perf_base where bucket is not null) as peso
-from perf_base
+    sum(value) filter (where bucket = 'cur') / (select mkt_cur from tot) as peso
+from base
 where bucket is not null
 group by 1
 having sum(value) filter (where bucket = 'cur') > 0
@@ -84,8 +81,8 @@ order by ventas desc
 
 <DataTable data={perf} rows=20 search=true totalRow=true>
     <Column id=dimension   title="Dimensión" />
-    <Column id=ventas      title="Ventas {inputs.win.value}"   fmt="#,##0" />
-    <Column id=ventas_prev title="Ventas {inputs.win.value}-1" fmt="#,##0" />
+    <Column id=ventas      title="Ventas {inputs.win}"   fmt="#,##0" />
+    <Column id=ventas_prev title="Ventas {inputs.win}-1" fmt="#,##0" />
     <Column id=crecimiento title="Crecimiento" fmt="#,##0" contentType=delta />
     <Column id=pct_crec    title="%Crecimiento" fmt="0.0%"  contentType=delta />
     <Column id=peso        title="%Peso"        fmt="0.0%"  contentType=colorscale />

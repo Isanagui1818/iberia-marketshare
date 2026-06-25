@@ -1,5 +1,6 @@
 ---
 title: Glosario
+sidebar_position: 1
 ---
 
 Definiciones de las medidas y los horizontes temporales del informe. Replican el modelo
