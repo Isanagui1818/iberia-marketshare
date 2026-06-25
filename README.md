@@ -1,4 +1,5 @@
-<p align="center"><em>This repository is still under development.</em></p>
+> [!NOTE]
+> _This repository is still under development._
 
 # Iberia Market-Share Data Warehouse
 

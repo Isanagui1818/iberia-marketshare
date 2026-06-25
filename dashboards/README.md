@@ -1,4 +1,5 @@
-<p align="center"><em>Only the Streamlit dashboard is currently operational. The Evidence and Looker Studio dashboards are still pending development.</em></p>
+> [!WARNING]
+> _Only the Streamlit dashboard is currently operational. The Evidence and Looker Studio dashboards are still pending development._
 
 ## Quick start
 

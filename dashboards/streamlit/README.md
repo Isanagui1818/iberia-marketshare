@@ -1,4 +1,5 @@
-<p align="center"><em>This is a preliminary version that will keep being improved. The structure is already complete, but aesthetic improvements are still pending.</em></p>
+> [!NOTE]
+> _This is a preliminary version that will keep being improved. The structure is already complete, but aesthetic improvements are still pending._
 
 # Streamlit dashboard — Market Data SN
 
