@@ -6,7 +6,7 @@
 Multi-page Python replica of the Power BI report, in Spanish, on the synthetic data.
 A code-native version of the original 8-page report.
 
-**Live app — [iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)** ·
+**Live app — [📊iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)** ·
 published and ready to consult, no setup required. The [Run locally](#run-locally) section
 below is only needed to launch it on your own machine.
 
