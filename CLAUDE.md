@@ -64,9 +64,11 @@ Run: `cd dashboards/streamlit && pip install -r requirements.txt && python -m st
   year(s) shifted back by the number of selected years (YoY). In multi mode the per-page
   MES/L4M/YTD/TAM selectors are hidden. `company_table`/`breakdown_table` take resolved
   `cur`/`prev` lists.
-- **Vista General** increment charts depend only on the YEAR (not the month filter); the
-  monthly chart plots market share (there is no per-month BPS), so its tooltip shows `%` in
-  both Market Share and BPS modes. KPI cards have no hover tooltips (read by color + arrow).
+- **Vista General** increment charts depend only on the YEAR (not the month filter). The
+  monthly chart shows two bars (this year vs prior year) for Ventas/Market Share; in **BPS**
+  mode it shows a single per-month year-over-year BPS. Tooltips are typed by metric
+  (`es_pct` / `es_escala` / `es_sig` for BPS, with adaptive decimals so a tiny BPS isn't 0).
+  KPI cards have no hover tooltips (read by color + arrow).
 - `core.window` returns an **empty** prev/ly window at the data boundary (no negative slicing).
 
 ## Evidence dashboard (`dashboards/evidence/`)

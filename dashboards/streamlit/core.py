@@ -2,6 +2,7 @@
 Replica el modelo Power BI (Ventas / Market Share / BPS / %Peso / crecimientos)
 sobre los datos sintéticos. Todo en euros/unidades anonimizadas."""
 from pathlib import Path
+import math
 import pandas as pd
 import streamlit as st
 
@@ -188,6 +189,16 @@ def es_escala(v):
 
 def es_pct(v, dec=1):
     return f"{es_num(v * 100, dec)} %"
+
+
+def es_sig(v, sig=2, maxdec=8):
+    """Decimales adaptativos: muestra al menos `sig` cifras significativas. Útil para valores
+    pequeños (p. ej. un BPS de 0,005) que con pocos decimales saldrían como 0 pese a existir."""
+    if v == 0:
+        return "0"
+    exp = math.floor(math.log10(abs(v)))
+    dec = min(max(0, sig - 1 - exp), maxdec)
+    return es_num(v, dec)
 
 
 def arrow(v, has_prior=True):

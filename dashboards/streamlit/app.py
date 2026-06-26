@@ -240,17 +240,12 @@ def page_vista():
         return C.market_share(comp, mkt, C.window(a_chart, tipo, var))
 
     def fmtval(v):
-        # gráfico de PERÍODOS: % para Market Share · número para BPS · valor adaptativo para Ventas.
+        # % para Market Share · BPS con decimales adaptativos (es_sig) · valor adaptativo para Ventas.
         if metr == "Market Share":
             return C.es_pct(v)
         if metr == "BPS":
-            return C.es_num(v)
+            return C.es_sig(v)
         return C.es_escala(v)
-
-    def fmtval_m(v):
-        # gráfico MENSUAL: muestra cuota de mercado salvo en Ventas (el BPS por mes no existe),
-        # así que en Market Share y BPS se formatea como % para que no aparezca 0.
-        return C.es_escala(v) if metr == "Ventas" else C.es_pct(v)
     htmpl = "%{fullData.name}<br><b>%{customdata}</b><extra></extra>"
 
     g1, g2 = st.columns(2)
@@ -274,29 +269,46 @@ def page_vista():
 
     # mensual: depende solo del año (ignora el filtro de meses), 12 meses vs año anterior
     yr = chart_year
-    def mval(m, y):
-        per = y * 100 + m
-        if per not in C.PERIODS:
-            return 0
-        return (C.ventas(comp, [per]) if metr == "Ventas"
-                else C.market_share(comp, mkt, [per]))
-    ma = [mval(m, yr) for m in range(1, 13)]
-    mp = [mval(m, yr - 1) for m in range(1, 13)]
     figm = go.Figure()
-    figm.add_bar(name="Período Actual", x=C.MESES, y=ma, marker_color=C.NAVY,
-                 customdata=[fmtval_m(v) for v in ma], hovertemplate=htmpl)
-    figm.add_bar(name="Período Anterior", x=C.MESES, y=mp, marker_color=C.ACCENT,
-                 customdata=[fmtval_m(v) for v in mp], hovertemplate=htmpl)
+    if metr == "BPS":
+        # BPS por mes = (cuota mes año actual − cuota mismo mes año anterior) × 10000.
+        # Un único dato por mes (el BPS ya es una comparación), con decimales adaptativos.
+        def mbps(m):
+            cp, pp = yr * 100 + m, (yr - 1) * 100 + m
+            has = pp in C.PERIODS
+            sc = C.market_share(comp, mkt, [cp]) if cp in C.PERIODS else 0
+            sp = C.market_share(comp, mkt, [pp]) if has else 0
+            return C.bps(sc, sp, has)
+        yb = [mbps(m) for m in range(1, 13)]
+        figm.add_bar(name="BPS", x=C.MESES, y=yb, marker_color=C.NAVY,
+                     customdata=[C.es_sig(v) for v in yb],
+                     hovertemplate="<b>%{customdata}</b><extra></extra>")
+    else:
+        def mval(m, y):
+            per = y * 100 + m
+            if per not in C.PERIODS:
+                return 0
+            return (C.ventas(comp, [per]) if metr == "Ventas"
+                    else C.market_share(comp, mkt, [per]))
+        fm = C.es_escala if metr == "Ventas" else C.es_pct
+        ma = [mval(m, yr) for m in range(1, 13)]
+        mp = [mval(m, yr - 1) for m in range(1, 13)]
+        figm.add_bar(name="Período Actual", x=C.MESES, y=ma, marker_color=C.NAVY,
+                     customdata=[fm(v) for v in ma], hovertemplate=htmpl)
+        figm.add_bar(name="Período Anterior", x=C.MESES, y=mp, marker_color=C.ACCENT,
+                     customdata=[fm(v) for v in mp], hovertemplate=htmpl)
     figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
                        showlegend=False, separators=",.")
     g2.plotly_chart(figm, width="stretch")
 
-    # leyenda única, centrada, que aplica a los DOS gráficos de arriba
-    st.markdown(
-        f"<div style='text-align:center;font-size:.85rem;margin-top:-.5rem;'>"
-        f"<span style='color:{C.NAVY};font-size:1.1rem;'>■</span> Período Actual"
-        f"&nbsp;&nbsp;&nbsp;<span style='color:{C.ACCENT};font-size:1.1rem;'>■</span> Período Anterior"
-        f"</div>", unsafe_allow_html=True)
+    # leyenda única (solo en Ventas/Market Share, que tienen dos series Actual/Anterior;
+    # en BPS cada gráfico es de una sola serie).
+    if metr != "BPS":
+        st.markdown(
+            f"<div style='text-align:center;font-size:.85rem;margin-top:-.5rem;'>"
+            f"<span style='color:{C.NAVY};font-size:1.1rem;'>■</span> Período Actual"
+            f"&nbsp;&nbsp;&nbsp;<span style='color:{C.ACCENT};font-size:1.1rem;'>■</span> Período Anterior"
+            f"</div>", unsafe_allow_html=True)
 
     st.write("")
     # --- Performance del Mercado ---
