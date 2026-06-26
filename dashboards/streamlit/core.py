@@ -65,6 +65,27 @@ def window(anchor, tipo, variant):
     return []
 
 
+def resolve(years, months, tipo):
+    """Resuelve (períodos_actual, períodos_anterior, has_prior, multi) según la selección.
+    - Un único período (1 año, 1 mes) -> modo ventana: usa window(anchor, tipo) con
+      MES/L4M/YTD/TAM y compara contra el bloque inmediatamente anterior.
+    - Selección múltiple (varios meses y/o años) -> suma los períodos elegidos y compara
+      contra los mismos meses con los años desplazados atrás tantos años como años
+      seleccionados (p. ej. May+Jun 2023 -> May+Jun 2022; 2022+2023 -> 2020+2021),
+      existan o no los datos del bloque anterior."""
+    years, months = sorted(years), sorted(months)
+    multi = len(years) > 1 or len(months) > 1
+    if not multi:
+        a = years[0] * 100 + months[0]
+        if a not in PERIODS:
+            a = max(p for p in PERIODS if p <= a)
+        return window(a, tipo, "current"), window(a, tipo, "prev"), bool(window(a, tipo, "prev")), False
+    n = len(years)
+    cur = sorted(p for y in years for m in months if (p := y * 100 + m) in PERIODS)
+    prev = sorted(p for y in years for m in months if (p := (y - n) * 100 + m) in PERIODS)
+    return cur, prev, bool(prev), True
+
+
 # --------------------------------------------------------------------------- #
 # Medidas
 # --------------------------------------------------------------------------- #
@@ -96,10 +117,10 @@ def bps(ms_cur, ms_prev, has_prior=True):
     return (ms_cur - ms_prev) * 10000 if has_prior else 0.0
 
 
-def company_table(mkt_df, tipo, anchor):
-    """Tabla por compañía: Ventas, MS, BPS, Crecimiento, %Crecimiento (período 'tipo').
-    Si no hay período anterior (has_prior=False) las medidas comparativas valen 0."""
-    cur, prev = window(anchor, tipo, "current"), window(anchor, tipo, "prev")
+def company_table(mkt_df, cur, prev):
+    """Tabla por compañía: Ventas, MS, BPS, Crecimiento, %Crecimiento sobre los períodos
+    'cur' vs 'prev' (ya resueltos). Si no hay período anterior las medidas comparativas
+    valen 0."""
     has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
     rows = []
@@ -117,9 +138,9 @@ def company_table(mkt_df, tipo, anchor):
     return df
 
 
-def breakdown_table(mkt_df, field_col, tipo, anchor):
-    """Tabla por dimensión (Selector de Campo) con todas las métricas del período."""
-    cur, prev = window(anchor, tipo, "current"), window(anchor, tipo, "prev")
+def breakdown_table(mkt_df, field_col, cur, prev, label):
+    """Tabla por dimensión (Selector de Campo) con todas las métricas. 'label' nombra las
+    columnas (la ventana en modo único, o 'Sel.' en multiselección)."""
     has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
     rows = []
@@ -129,14 +150,14 @@ def breakdown_table(mkt_df, field_col, tipo, anchor):
         # market share del segmento = ventas segmento / ventas mercado, dentro del propio segmento universe
         ms = v / tot_cur if tot_cur else 0
         msp = vp / tot_prev if tot_prev else 0
-        rows.append({field_col: m, f"Ventas {tipo}": v, f"Ventas {tipo}-1": vp,
-                     f"Crecimiento {tipo}": (v - vp) if has_prior else 0.0,
-                     f"%Crecimiento {tipo}": (v / vp - 1) if vp else 0.0,
-                     f"Market Share {tipo}": ms, f"Market Share {tipo}-1": msp,
-                     f"BPS {tipo}": bps(ms, msp, has_prior),
-                     f"%Peso {tipo}": v / tot_cur if tot_cur else 0,
-                     f"%Peso {tipo}-1": vp / tot_prev if tot_prev else 0})
-    df = pd.DataFrame(rows).sort_values(f"Ventas {tipo}", ascending=False).reset_index(drop=True)
+        rows.append({field_col: m, f"Ventas {label}": v, f"Ventas {label}-1": vp,
+                     f"Crecimiento {label}": (v - vp) if has_prior else 0.0,
+                     f"%Crecimiento {label}": (v / vp - 1) if vp else 0.0,
+                     f"Market Share {label}": ms, f"Market Share {label}-1": msp,
+                     f"BPS {label}": bps(ms, msp, has_prior),
+                     f"%Peso {label}": v / tot_cur if tot_cur else 0,
+                     f"%Peso {label}-1": vp / tot_prev if tot_prev else 0})
+    df = pd.DataFrame(rows).sort_values(f"Ventas {label}", ascending=False).reset_index(drop=True)
     df.attrs["has_prior"] = has_prior
     return df
 

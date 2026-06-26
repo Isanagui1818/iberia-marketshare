@@ -76,18 +76,29 @@ def topnav():
 # Barra de filtros compartida -> devuelve selección
 # --------------------------------------------------------------------------- #
 def filtros(solo_fecha=False):
+    """Barra de filtros. Año y Mes son multiselección (con opción 'Todos'):
+    - una sola selección (1 año + 1 mes) -> modo ventana (MES/L4M/YTD/TAM).
+    - varios años/meses -> se suman y se comparan con el mismo período del/los año(s)
+      anterior(es). El flag 'multi' indica el modo; las páginas usan C.resolve()."""
     years = sorted(C.CAL["Year"].unique())
+    ly, lm = C.LAST_PERIOD // 100, C.LAST_PERIOD % 100
     c = st.columns(8)
-    # Por defecto, el año más reciente con datos (índice al último de la lista)
-    anio = c[0].selectbox("Año", ["Todas"] + years, index=len(years), key="f_anio")
-    mes = c[1].selectbox("Mes", ["Mes Actual"] + C.MESES, key="f_mes")
-    yr = max(years) if anio == "Todas" else anio
-    months = sorted(C.CAL.loc[C.CAL["Year"] == yr, "Month Number"].unique())
-    mo = max(months) if mes == "Mes Actual" else (C.MESES.index(mes) + 1)
-    anchor = yr * 100 + mo
-    anchor = anchor if anchor in C.PERIODS else max(p for p in C.PERIODS if p <= anchor)
+    anio_raw = c[0].multiselect("Año", ["Todos"] + years, default=[ly], key="f_anio")
+    mes_raw = c[1].multiselect("Mes", ["Todos"] + C.MESES, default=[C.MESES[lm - 1]], key="f_mes")
+    sel_years = years if "Todos" in anio_raw else [y for y in anio_raw if y != "Todos"]
+    sel_mes = C.MESES if "Todos" in mes_raw else [m for m in mes_raw if m != "Todos"]
+    if not sel_years:
+        sel_years = [ly]
+    if not sel_mes:
+        sel_mes = [C.MESES[lm - 1]]
+    sel_months = sorted(C.MESES.index(x) + 1 for x in sel_mes)
+    multi = len(sel_years) > 1 or len(sel_months) > 1
+    sel_periods = sorted(p for y in sel_years for m in sel_months if (p := y * 100 + m) in C.PERIODS)
+    anchor = max(sel_periods) if sel_periods else C.LAST_PERIOD
+    base = dict(years=sel_years, months=sel_months, multi=multi, anchor=anchor)
     if solo_fecha:
-        return dict(anchor=anchor, metric="Valor €", company=None, area=[], cat=[], ent=[], canal=[])
+        base.update(metric="Valor €", company=None, area=[], cat=[], ent=[], canal=[])
+        return base
     metric = c[2].selectbox("Métrica", C.METRICS, key="f_metric")
     company = c[3].selectbox("Compañía", C.COMPANIES,
                              index=C.COMPANIES.index("Compañía SN") if "Compañía SN" in C.COMPANIES else 0,
@@ -96,7 +107,8 @@ def filtros(solo_fecha=False):
     cat = c[5].multiselect("Categoría", sorted(C.FACT["Category"].dropna().unique()), key="f_cat")
     ent = c[6].multiselect("Entorno", sorted(C.FACT["Type Channel"].dropna().unique()), key="f_ent")
     canal = c[7].multiselect("Canal", sorted(C.FACT["Channel"].dropna().unique()), key="f_canal")
-    return dict(anchor=anchor, metric=metric, company=company, area=area, cat=cat, ent=ent, canal=canal)
+    base.update(metric=metric, company=company, area=area, cat=cat, ent=ent, canal=canal)
+    return base
 
 
 def kpi(col, title, value, sub_html=""):
@@ -165,83 +177,111 @@ def page_vista():
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
     comp = mkt[mkt["Manufacturer"] == f["company"]]
     a = f["anchor"]
+    multi = f["multi"]
+    k = st.columns(5)
 
     # --- KPIs ---
-    def rng(tipo, var):
-        w = C.window(a, "L6M", var)
-        return f"{min(w)%100:02d}/{min(w)//100} - {max(w)%100:02d}/{max(w)//100}" if w else ""
-    v_prev = C.ventas(comp, C.window(a, "L6M", "prev"))
-    v_cur = C.ventas(comp, C.window(a, "L6M", "current"))
-    dif = v_cur - v_prev
-    ms = C.market_share(comp, mkt, C.window(a, "MES", "current"))
-    k = st.columns(5)
-    has6 = bool(C.window(a, "L6M", "prev"))   # ¿hay 6 meses anteriores con los que comparar?
-    kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_mill(v_prev))
-    kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_mill(v_cur))
-    tip6 = f"Últimos 6 meses {C.es_mill(v_cur)} vs 6 meses anteriores {C.es_mill(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
-    kpi(k[2], "Variación Últimos 6 meses",
-        f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_mill(dif)}</span>",
-        f"<span style='color:{C.color(dif, has6)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
-    kpi(k[3], "Market Share Mes", C.es_pct(ms))
-    bps_html = ""
-    for tp in ["MES", "L4M", "YTD", "TAM"]:
-        hasp = bool(C.window(a, tp, "prev"))
-        msc = C.market_share(comp, mkt, C.window(a, tp, "current"))
-        msp = C.market_share(comp, mkt, C.window(a, tp, "prev"))
-        b = C.bps(msc, msp, hasp)
-        tipb = (f"Cuota actual {C.es_pct(msc)} vs anterior {C.es_pct(msp)}" if hasp
-                else "Sin período anterior con el que comparar")
-        bps_html += (f"BPS {tp} <span style='color:{C.color(b, hasp)}' title='{tipb}'>"
-                     f"{C.arrow(b, hasp)} {C.es_num(b)}</span><br>")
-    kpi(k[4], "BPS", "", bps_html)
+    if not multi:
+        def rng(tipo, var):
+            w = C.window(a, "L6M", var)
+            return f"{min(w)%100:02d}/{min(w)//100} - {max(w)%100:02d}/{max(w)//100}" if w else ""
+        v_prev = C.ventas(comp, C.window(a, "L6M", "prev"))
+        v_cur = C.ventas(comp, C.window(a, "L6M", "current"))
+        dif = v_cur - v_prev
+        ms = C.market_share(comp, mkt, C.window(a, "MES", "current"))
+        has6 = bool(C.window(a, "L6M", "prev"))   # ¿hay 6 meses anteriores con los que comparar?
+        kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_mill(v_prev))
+        kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_mill(v_cur))
+        tip6 = f"Últimos 6 meses {C.es_mill(v_cur)} vs 6 meses anteriores {C.es_mill(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
+        kpi(k[2], "Variación Últimos 6 meses",
+            f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_mill(dif)}</span>",
+            f"<span style='color:{C.color(dif, has6)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
+        kpi(k[3], "Market Share Mes", C.es_pct(ms))
+        bps_html = ""
+        for tp in ["MES", "L4M", "YTD", "TAM"]:
+            hasp = bool(C.window(a, tp, "prev"))
+            msc = C.market_share(comp, mkt, C.window(a, tp, "current"))
+            msp = C.market_share(comp, mkt, C.window(a, tp, "prev"))
+            b = C.bps(msc, msp, hasp)
+            tipb = (f"Cuota actual {C.es_pct(msc)} vs anterior {C.es_pct(msp)}" if hasp
+                    else "Sin período anterior con el que comparar")
+            bps_html += (f"BPS {tp} <span style='color:{C.color(b, hasp)}' title='{tipb}'>"
+                         f"{C.arrow(b, hasp)} {C.es_num(b)}</span><br>")
+        kpi(k[4], "BPS", "", bps_html)
+    else:
+        cur, prev, has_prior, _ = C.resolve(f["years"], f["months"], "MES")
+        v_cur, v_prev = C.ventas(comp, cur), C.ventas(comp, prev)
+        dif = v_cur - v_prev
+        ms, msp = C.market_share(comp, mkt, cur), C.market_share(comp, mkt, prev)
+        b = C.bps(ms, msp, has_prior)
+        tipv = (f"Selección {C.es_mill(v_cur)} vs mismo período año(s) anterior(es) {C.es_mill(v_prev)}"
+                if has_prior else "Sin período anterior equivalente con datos")
+        kpi(k[0], "Ventas período anterior", C.es_mill(v_prev) if has_prior else "—")
+        kpi(k[1], "Ventas selección", C.es_mill(v_cur))
+        kpi(k[2], "Variación vs año anterior",
+            f"<span style='color:{C.color(dif, has_prior)}' title='{tipv}'>{C.arrow(dif, has_prior)} {C.es_mill(dif)}</span>",
+            f"<span style='color:{C.color(dif, has_prior)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
+        kpi(k[3], "Market Share", C.es_pct(ms))
+        kpi(k[4], "BPS", f"<span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span>")
 
     st.write("")
-    # --- Incremento vs Período Anterior ---
-    st.subheader("Incremento vs Período Anterior")
-    metr = st.radio("Métrica del gráfico", ["Market Share", "Ventas", "BPS"],
-                    horizontal=True, label_visibility="collapsed", key="vg_metr")
+    # --- Incremento vs Período Anterior (solo en modo ventana única) ---
+    if not multi:
+        st.subheader("Incremento vs Período Anterior")
+        metr = st.radio("Métrica del gráfico", ["Market Share", "Ventas", "BPS"],
+                        horizontal=True, label_visibility="collapsed", key="vg_metr")
 
-    def val(tipo, var):
-        if metr == "Ventas":
-            return C.ventas(comp, C.window(a, tipo, var))
-        msc = C.market_share(comp, mkt, C.window(a, tipo, "current"))
+        def val(tipo, var):
+            if metr == "Ventas":
+                return C.ventas(comp, C.window(a, tipo, var))
+            msc = C.market_share(comp, mkt, C.window(a, tipo, "current"))
+            if metr == "BPS":
+                return C.bps(msc, C.market_share(comp, mkt, C.window(a, tipo, "prev")))
+            return C.market_share(comp, mkt, C.window(a, tipo, var))
+
+        g1, g2 = st.columns(2)
+        tipos = ["MES", "L4M", "YTD", "TAM"]
+        fig = go.Figure()
         if metr == "BPS":
-            return C.bps(msc, C.market_share(comp, mkt, C.window(a, tipo, "prev")))
-        return C.market_share(comp, mkt, C.window(a, tipo, var))
+            fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.ACCENT)
+        else:
+            fig.add_bar(name="Período Actual", x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
+            fig.add_bar(name="Período Anterior", x=tipos, y=[val(t, "prev") for t in tipos], marker_color=C.ACCENT)
+        fig.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
+                          legend=dict(orientation="h", y=-.15))
+        g1.plotly_chart(fig, width="stretch")
 
-    g1, g2 = st.columns(2)
-    tipos = ["MES", "L4M", "YTD", "TAM"]
-    fig = go.Figure()
-    if metr == "BPS":
-        fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.ACCENT)
+        # mensual actual vs año anterior
+        yr = a // 100
+        figm = go.Figure()
+        def mval(m, y):
+            per = y * 100 + m
+            if per not in C.PERIODS:
+                return 0
+            return (C.ventas(comp, [per]) if metr == "Ventas"
+                    else C.market_share(comp, mkt, [per]))
+        figm.add_bar(name="Período Actual", x=C.MESES, y=[mval(m, yr) for m in range(1, 13)], marker_color=C.NAVY)
+        figm.add_bar(name="Período Anterior", x=C.MESES, y=[mval(m, yr - 1) for m in range(1, 13)], marker_color=C.ACCENT)
+        figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
+                           legend=dict(orientation="h", y=-.15))
+        g2.plotly_chart(figm, width="stretch")
     else:
-        fig.add_bar(name="Período Actual", x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
-        fig.add_bar(name="Período Anterior", x=tipos, y=[val(t, "prev") for t in tipos], marker_color=C.ACCENT)
-    fig.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
-                      legend=dict(orientation="h", y=-.15))
-    g1.plotly_chart(fig, width="stretch")
-
-    # mensual actual vs año anterior
-    yr = a // 100
-    figm = go.Figure()
-    def mval(m, y):
-        per = y * 100 + m
-        if per not in C.PERIODS:
-            return 0
-        return (C.ventas(comp, [per]) if metr == "Ventas"
-                else C.market_share(comp, mkt, [per]))
-    figm.add_bar(name="Período Actual", x=C.MESES, y=[mval(m, yr) for m in range(1, 13)], marker_color=C.NAVY)
-    figm.add_bar(name="Período Anterior", x=C.MESES, y=[mval(m, yr - 1) for m in range(1, 13)], marker_color=C.ACCENT)
-    figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
-                       legend=dict(orientation="h", y=-.15))
-    g2.plotly_chart(figm, width="stretch")
+        st.info("🔎 **Selección múltiple**: se suman los períodos elegidos y se comparan con el "
+                "mismo período del/los año(s) anterior(es). Las ventanas MES/L4M/YTD/TAM no aplican "
+                "en este modo.")
 
     st.write("")
     # --- Performance del Mercado ---
     h1, h2 = st.columns([2, 3])
     h1.subheader("Performance del Mercado")
-    tipo2 = h2.radio("Período", tipos, horizontal=True, index=1, label_visibility="collapsed", key="vg_perf")
-    ct = C.company_table(mkt, tipo2, a)
+    if not multi:
+        tipo2 = h2.radio("Período", ["MES", "L4M", "YTD", "TAM"], horizontal=True, index=1,
+                         label_visibility="collapsed", key="vg_perf")
+        cur2, prev2, _, _ = C.resolve(f["years"], f["months"], tipo2)
+    else:
+        h2.caption("Selección vs mismo período del año anterior")
+        cur2, prev2, _, _ = C.resolve(f["years"], f["months"], "MES")
+    ct = C.company_table(mkt, cur2, prev2)
     has_prior = ct.attrs.get("has_prior", True)
     b1, b2 = st.columns([2, 3])
     top = ct.head(7).iloc[::-1]
@@ -283,8 +323,18 @@ def page_performance():
     topnav(); header("Análisis profundo del rendimiento")
     f = filtros()
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
-    col, tipo = _selector_campo_kpi(["MES", "L4M", "YTD", "TAM"])
-    t = C.breakdown_table(mkt, col, tipo, f["anchor"])
+    c1, c2 = st.columns(2)
+    campo = c1.selectbox("Selector de Campo", list(C.FIELDS.keys()), key="perf_campo")
+    col = C.FIELDS[campo]
+    if not f["multi"]:
+        tipo = c2.radio("Período", ["MES", "L4M", "YTD", "TAM"], horizontal=True, key="perf_tipo")
+        cur, prev, _, _ = C.resolve(f["years"], f["months"], tipo)
+        label = tipo
+    else:
+        c2.caption("Selección vs mismo período del año anterior")
+        cur, prev, _, _ = C.resolve(f["years"], f["months"], "MES")
+        label = "Sel."
+    t = C.breakdown_table(mkt, col, cur, prev, label)
     has_prior = t.attrs.get("has_prior", True)
     pct = [c for c in t.columns if c.startswith("%") or "Market Share" in c]
     comp_cols = [c for c in t.columns if "Crecimiento" in c or c.startswith("BPS")]
@@ -339,17 +389,21 @@ def page_evolucion():
 def page_segmento():
     topnav(); header("Segmento de Mercado — comparación de productos")
     f = filtros()
-    tipo = st.radio("Ventana de comparación", ["L4M", "L3M"], horizontal=True, key="seg_t",
-                    help="L4M = últimos 4 meses · L3M = últimos 3 meses. El crecimiento compara "
-                         "el período con su equivalente anterior.")
+    if not f["multi"]:
+        tipo = st.radio("Ventana de comparación", ["L4M", "L3M"], horizontal=True, key="seg_t",
+                        help="L4M = últimos 4 meses · L3M = últimos 3 meses. El crecimiento compara "
+                             "el período con su equivalente anterior.")
+        cur, prev, has_prior, _ = C.resolve(f["years"], f["months"], tipo)
+    else:
+        st.caption("Selección múltiple: comparando con el mismo período del año anterior.")
+        tipo = "Sel."
+        cur, prev, has_prior, _ = C.resolve(f["years"], f["months"], "MES")
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
     prods = sorted(mkt["Category"].dropna().unique())
     defaults = prods[:4]
     sel = st.multiselect("Selecciona hasta 4 categorías/productos", prods, default=defaults,
                          max_selections=4, key="seg_sel")
     cols = st.columns(max(1, len(sel)))
-    cur, prev = C.window(f["anchor"], tipo, "current"), C.window(f["anchor"], tipo, "prev")
-    has_prior = bool(prev)
     tot_c, tot_p = C.ventas(mkt, cur), C.ventas(mkt, prev)
     for col, name in zip(cols, sel):
         gd = mkt[mkt["Category"] == name]
@@ -396,14 +450,20 @@ def page_dinamico():
     mkt = C.apply_filters(f["metric"], f["area"], f["cat"], f["ent"], f["canal"])
     c1, c2 = st.columns(2)
     dims = c1.multiselect("Campos (filas)", list(C.FIELDS.keys()), default=["Compañía", "Categoría"])
-    tipo = c2.radio("Período", ["MES", "L4M", "YTD", "TAM"], horizontal=True, key="dn_t")
+    if not f["multi"]:
+        tipo = c2.radio("Período", ["MES", "L4M", "YTD", "TAM"], horizontal=True, key="dn_t")
+        per, _, _, _ = C.resolve(f["years"], f["months"], tipo)
+        lbl = tipo
+    else:
+        c2.caption("Suma de los períodos seleccionados")
+        per, _, _, _ = C.resolve(f["years"], f["months"], "MES")
+        lbl = "Sel."
     if not dims:
         st.info("Elige al menos un campo."); return
     cols = [C.FIELDS[d] for d in dims]
-    per = C.window(f["anchor"], tipo, "current")
     g = (mkt[mkt["Period ID"].isin(per)].groupby(cols)["KPI Value"].sum()
-         .reset_index().rename(columns={"KPI Value": f"Ventas {tipo}"})
-         .sort_values(f"Ventas {tipo}", ascending=False))
+         .reset_index().rename(columns={"KPI Value": f"Ventas {lbl}"})
+         .sort_values(f"Ventas {lbl}", ascending=False))
     st.dataframe(g, width="stretch", height=330, hide_index=True)
     d1, d2 = st.columns(2)
     d1.download_button("⬇️ Descargar CSV", g.to_csv(index=False).encode("utf-8"),
