@@ -202,9 +202,7 @@ def page_vista():
             msc = C.market_share(comp, mkt, C.window(a, tp, "current"))
             msp = C.market_share(comp, mkt, C.window(a, tp, "prev"))
             b = C.bps(msc, msp, hasp)
-            tipb = (f"Cuota actual {C.es_pct(msc)} vs anterior {C.es_pct(msp)}" if hasp
-                    else "Sin período anterior con el que comparar")
-            bps_html += (f"BPS {tp} <span style='color:{C.color(b, hasp)}' title='{tipb}'>"
+            bps_html += (f"BPS {tp} <span style='color:{C.color(b, hasp)}'>"
                          f"{C.arrow(b, hasp)} {C.es_num(b)}</span><br>")
         kpi(k[4], "BPS", "", bps_html)
     else:
