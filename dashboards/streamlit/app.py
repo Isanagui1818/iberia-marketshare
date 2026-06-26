@@ -240,13 +240,17 @@ def page_vista():
         return C.market_share(comp, mkt, C.window(a_chart, tipo, var))
 
     def fmtval(v):
-        # el tooltip muestra el valor según la métrica del gráfico:
-        # % para Market Share · número para BPS · valor absoluto adaptativo para Ventas.
+        # gráfico de PERÍODOS: % para Market Share · número para BPS · valor adaptativo para Ventas.
         if metr == "Market Share":
             return C.es_pct(v)
         if metr == "BPS":
             return C.es_num(v)
         return C.es_escala(v)
+
+    def fmtval_m(v):
+        # gráfico MENSUAL: muestra cuota de mercado salvo en Ventas (el BPS por mes no existe),
+        # así que en Market Share y BPS se formatea como % para que no aparezca 0.
+        return C.es_escala(v) if metr == "Ventas" else C.es_pct(v)
     htmpl = "%{fullData.name}<br><b>%{customdata}</b><extra></extra>"
 
     g1, g2 = st.columns(2)
@@ -280,9 +284,9 @@ def page_vista():
     mp = [mval(m, yr - 1) for m in range(1, 13)]
     figm = go.Figure()
     figm.add_bar(name="Período Actual", x=C.MESES, y=ma, marker_color=C.NAVY,
-                 customdata=[fmtval(v) for v in ma], hovertemplate=htmpl)
+                 customdata=[fmtval_m(v) for v in ma], hovertemplate=htmpl)
     figm.add_bar(name="Período Anterior", x=C.MESES, y=mp, marker_color=C.ACCENT,
-                 customdata=[fmtval(v) for v in mp], hovertemplate=htmpl)
+                 customdata=[fmtval_m(v) for v in mp], hovertemplate=htmpl)
     figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
                        showlegend=False, separators=",.")
     g2.plotly_chart(figm, width="stretch")
