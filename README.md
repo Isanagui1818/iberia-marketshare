@@ -88,7 +88,7 @@ period framework, tested), an **Evidence.dev** SQL/Markdown site, and a
 
 ## Stack
 
-Snowflake · SQL · Power BI · Snowflake Schema · Incremental ELT · Streamlit · Data Engineering · Data Analytics
+Data Engineering · Incremental ELT  · Snowflake · SQL · Power BI · Snowflake Schema · Streamlit · Evidence · Data Analytics
 
 ## Disclaimer
 
