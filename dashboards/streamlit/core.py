@@ -174,6 +174,18 @@ def es_mill(v):
     return f"{es_num(v / 1e6, 1)} mill."
 
 
+def es_escala(v):
+    """Formato adaptativo a la magnitud (nomenclatura europea):
+    >= 1 millón -> 'mill.' · >= 1.000 -> 'mil' · resto -> número completo.
+    Evita perder detalle (p. ej. 32.857 se ve '32,9 mil', no '0,0 mill.')."""
+    m = abs(v)
+    if m >= 1e6:
+        return f"{es_num(v / 1e6, 1)} mill."
+    if m >= 1e3:
+        return f"{es_num(v / 1e3, 1)} mil"
+    return es_num(v, 0)
+
+
 def es_pct(v, dec=1):
     return f"{es_num(v * 100, dec)} %"
 

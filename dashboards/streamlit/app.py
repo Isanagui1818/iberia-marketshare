@@ -190,11 +190,11 @@ def page_vista():
         dif = v_cur - v_prev
         ms = C.market_share(comp, mkt, C.window(a, "MES", "current"))
         has6 = bool(C.window(a, "L6M", "prev"))   # ¿hay 6 meses anteriores con los que comparar?
-        kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_mill(v_prev))
-        kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_mill(v_cur))
-        tip6 = f"Últimos 6 meses {C.es_mill(v_cur)} vs 6 meses anteriores {C.es_mill(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
+        kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_escala(v_prev))
+        kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_escala(v_cur))
+        tip6 = f"Últimos 6 meses {C.es_escala(v_cur)} vs 6 meses anteriores {C.es_escala(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
         kpi(k[2], "Variación Últimos 6 meses",
-            f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_mill(dif)}</span>",
+            f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_escala(dif)}</span>",
             f"<span style='color:{C.color(dif, has6)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
         kpi(k[3], "Market Share Mes", C.es_pct(ms))
         bps_html = ""
@@ -214,61 +214,69 @@ def page_vista():
         dif = v_cur - v_prev
         ms, msp = C.market_share(comp, mkt, cur), C.market_share(comp, mkt, prev)
         b = C.bps(ms, msp, has_prior)
-        tipv = (f"Selección {C.es_mill(v_cur)} vs mismo período año(s) anterior(es) {C.es_mill(v_prev)}"
+        tipv = (f"Selección {C.es_escala(v_cur)} vs mismo período año(s) anterior(es) {C.es_escala(v_prev)}"
                 if has_prior else "Sin período anterior equivalente con datos")
-        kpi(k[0], "Ventas período anterior", C.es_mill(v_prev) if has_prior else "—")
-        kpi(k[1], "Ventas selección", C.es_mill(v_cur))
+        kpi(k[0], "Ventas período anterior", C.es_escala(v_prev) if has_prior else "—")
+        kpi(k[1], "Ventas selección", C.es_escala(v_cur))
         kpi(k[2], "Variación vs año anterior",
-            f"<span style='color:{C.color(dif, has_prior)}' title='{tipv}'>{C.arrow(dif, has_prior)} {C.es_mill(dif)}</span>",
+            f"<span style='color:{C.color(dif, has_prior)}' title='{tipv}'>{C.arrow(dif, has_prior)} {C.es_escala(dif)}</span>",
             f"<span style='color:{C.color(dif, has_prior)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
         kpi(k[3], "Market Share", C.es_pct(ms))
         kpi(k[4], "BPS", f"<span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span>")
 
     st.write("")
-    # --- Incremento vs Período Anterior (solo en modo ventana única) ---
-    if not multi:
-        st.subheader("Incremento vs Período Anterior")
-        metr = st.radio("Métrica del gráfico", ["Market Share", "Ventas", "BPS"],
-                        horizontal=True, label_visibility="collapsed", key="vg_metr")
+    # --- Incremento vs Período Anterior ---
+    # Estos dos gráficos dependen SOLO del año (no del filtro de meses): el de períodos usa
+    # el año seleccionado como ancla y el mensual muestra los 12 meses del año vs el anterior.
+    st.subheader("Incremento vs Período Anterior")
+    metr = st.radio("Métrica del gráfico", ["Market Share", "Ventas", "BPS"],
+                    horizontal=True, label_visibility="collapsed", key="vg_metr")
+    chart_year = max(f["years"])
+    a_chart = a if not multi else max(p for p in C.PERIODS if p // 100 == chart_year)
+    if multi:
+        st.caption("Reflejan el año seleccionado, no el filtro de meses.")
 
-        def val(tipo, var):
-            if metr == "Ventas":
-                return C.ventas(comp, C.window(a, tipo, var))
-            msc = C.market_share(comp, mkt, C.window(a, tipo, "current"))
-            if metr == "BPS":
-                return C.bps(msc, C.market_share(comp, mkt, C.window(a, tipo, "prev")))
-            return C.market_share(comp, mkt, C.window(a, tipo, var))
-
-        g1, g2 = st.columns(2)
-        tipos = ["MES", "L4M", "YTD", "TAM"]
-        fig = go.Figure()
+    def val(tipo, var):
+        if metr == "Ventas":
+            return C.ventas(comp, C.window(a_chart, tipo, var))
+        msc = C.market_share(comp, mkt, C.window(a_chart, tipo, "current"))
         if metr == "BPS":
-            fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.ACCENT)
-        else:
-            fig.add_bar(name="Período Actual", x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
-            fig.add_bar(name="Período Anterior", x=tipos, y=[val(t, "prev") for t in tipos], marker_color=C.ACCENT)
-        fig.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
-                          legend=dict(orientation="h", y=-.15))
-        g1.plotly_chart(fig, width="stretch")
+            return C.bps(msc, C.market_share(comp, mkt, C.window(a_chart, tipo, "prev")))
+        return C.market_share(comp, mkt, C.window(a_chart, tipo, var))
 
-        # mensual actual vs año anterior
-        yr = a // 100
-        figm = go.Figure()
-        def mval(m, y):
-            per = y * 100 + m
-            if per not in C.PERIODS:
-                return 0
-            return (C.ventas(comp, [per]) if metr == "Ventas"
-                    else C.market_share(comp, mkt, [per]))
-        figm.add_bar(name="Período Actual", x=C.MESES, y=[mval(m, yr) for m in range(1, 13)], marker_color=C.NAVY)
-        figm.add_bar(name="Período Anterior", x=C.MESES, y=[mval(m, yr - 1) for m in range(1, 13)], marker_color=C.ACCENT)
-        figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
-                           legend=dict(orientation="h", y=-.15))
-        g2.plotly_chart(figm, width="stretch")
+    g1, g2 = st.columns(2)
+    tipos = ["MES", "L4M", "YTD", "TAM"]
+    fig = go.Figure()
+    if metr == "BPS":
+        fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
     else:
-        st.info("🔎 **Selección múltiple**: se suman los períodos elegidos y se comparan con el "
-                "mismo período del/los año(s) anterior(es). Las ventanas MES/L4M/YTD/TAM no aplican "
-                "en este modo.")
+        fig.add_bar(name="Período Actual", x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
+        fig.add_bar(name="Período Anterior", x=tipos, y=[val(t, "prev") for t in tipos], marker_color=C.ACCENT)
+    fig.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
+                      showlegend=False, separators=",.")
+    g1.plotly_chart(fig, width="stretch")
+
+    # mensual: depende solo del año (ignora el filtro de meses), 12 meses vs año anterior
+    yr = chart_year
+    figm = go.Figure()
+    def mval(m, y):
+        per = y * 100 + m
+        if per not in C.PERIODS:
+            return 0
+        return (C.ventas(comp, [per]) if metr == "Ventas"
+                else C.market_share(comp, mkt, [per]))
+    figm.add_bar(name="Período Actual", x=C.MESES, y=[mval(m, yr) for m in range(1, 13)], marker_color=C.NAVY)
+    figm.add_bar(name="Período Anterior", x=C.MESES, y=[mval(m, yr - 1) for m in range(1, 13)], marker_color=C.ACCENT)
+    figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
+                       showlegend=False, separators=",.")
+    g2.plotly_chart(figm, width="stretch")
+
+    # leyenda única, centrada, que aplica a los DOS gráficos de arriba
+    st.markdown(
+        f"<div style='text-align:center;font-size:.85rem;margin-top:-.5rem;'>"
+        f"<span style='color:{C.NAVY};font-size:1.1rem;'>■</span> Período Actual"
+        f"&nbsp;&nbsp;&nbsp;<span style='color:{C.ACCENT};font-size:1.1rem;'>■</span> Período Anterior"
+        f"</div>", unsafe_allow_html=True)
 
     st.write("")
     # --- Performance del Mercado ---
@@ -295,11 +303,10 @@ def page_vista():
     cdata = [[C.es_num(v), _var(cr)] for v, cr in zip(top["Ventas"], top["Crecimiento Ventas"])]
     figb = go.Figure(go.Bar(x=top["Ventas"], y=top["Compañía"], orientation="h",
                             marker_color=barcolors,
-                            text=[C.es_mill(v) for v in top["Ventas"]], textposition="outside",
                             cliponaxis=False, customdata=cdata,
                             hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
                             hoverlabel=dict(bgcolor=barcolors, font=dict(color="white"), align="left")))
-    figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10))
+    figb.update_layout(height=250, margin=dict(l=10, r=20, t=10, b=10), separators=",.")
     b1.plotly_chart(figb, width="stretch")
     disp = ct.copy()
     sty = (disp.style
@@ -376,7 +383,7 @@ def page_evolucion():
         else:
             fig.add_bar(x=labels, y=y, name=str(m), marker_color=cc)
     fig.update_layout(height=330, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
-                      yaxis_title=kpisel, legend=dict(orientation="h", y=-.18),
+                      yaxis_title=kpisel, legend=dict(orientation="h", y=-.18), separators=",.",
                       yaxis_tickformat=".0%" if kpisel == "Market Share" else None)
     st.plotly_chart(fig, width="stretch")
     tbl = pd.DataFrame(data, index=labels).T
@@ -424,7 +431,7 @@ def page_segmento():
                                hoverlabel=dict(bgcolor=[C.ACCENT, C.color(dif, has_prior)],
                                                font=dict(color="white"), align="left")))
         fig.update_layout(height=185, margin=dict(l=6, r=6, t=30, b=6), title=name,
-                          showlegend=False)
+                          showlegend=False, separators=",.")
         col.plotly_chart(fig, width="stretch")
         col.markdown(f"**BPS:** <span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span> · "
                      f"**%Crec.:** <span style='color:{C.color(g, has_prior)}'>{C.arrow(g, has_prior)} {C.es_pct(g)}</span>",
@@ -440,7 +447,7 @@ def page_birth():
                                line_color=C.GREEN, fill="tozeroy",
                                fillcolor="rgba(46,158,91,.15)"))
     fig.update_layout(height=330, margin=dict(l=10, r=10, t=10, b=10),
-                      yaxis_title="Tasa de natalidad (‰)")
+                      yaxis_title="Tasa de natalidad (‰)", separators=",.")
     st.plotly_chart(fig, width="stretch")
 
 
@@ -464,7 +471,8 @@ def page_dinamico():
     g = (mkt[mkt["Period ID"].isin(per)].groupby(cols)["KPI Value"].sum()
          .reset_index().rename(columns={"KPI Value": f"Ventas {lbl}"})
          .sort_values(f"Ventas {lbl}", ascending=False))
-    st.dataframe(g, width="stretch", height=330, hide_index=True)
+    st.dataframe(g.style.format({f"Ventas {lbl}": C.es_num}),
+                 width="stretch", height=330, hide_index=True)
     d1, d2 = st.columns(2)
     d1.download_button("⬇️ Descargar CSV", g.to_csv(index=False).encode("utf-8"),
                        "informe_dinamico.csv", "text/csv", width="stretch")
