@@ -192,9 +192,8 @@ def page_vista():
         has6 = bool(C.window(a, "L6M", "prev"))   # ¿hay 6 meses anteriores con los que comparar?
         kpi(k[0], f"Ventas {rng('L6M','prev')}", C.es_escala(v_prev))
         kpi(k[1], f"Ventas {rng('L6M','current')}", C.es_escala(v_cur))
-        tip6 = f"Últimos 6 meses {C.es_escala(v_cur)} vs 6 meses anteriores {C.es_escala(v_prev)}" if has6 else "Sin 6 meses anteriores con los que comparar"
         kpi(k[2], "Variación Últimos 6 meses",
-            f"<span style='color:{C.color(dif, has6)}' title='{tip6}'>{C.arrow(dif, has6)} {C.es_escala(dif)}</span>",
+            f"<span style='color:{C.color(dif, has6)}'>{C.arrow(dif, has6)} {C.es_escala(dif)}</span>",
             f"<span style='color:{C.color(dif, has6)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
         kpi(k[3], "Market Share Mes", C.es_pct(ms))
         bps_html = ""
@@ -214,12 +213,10 @@ def page_vista():
         dif = v_cur - v_prev
         ms, msp = C.market_share(comp, mkt, cur), C.market_share(comp, mkt, prev)
         b = C.bps(ms, msp, has_prior)
-        tipv = (f"Selección {C.es_escala(v_cur)} vs mismo período año(s) anterior(es) {C.es_escala(v_prev)}"
-                if has_prior else "Sin período anterior equivalente con datos")
         kpi(k[0], "Ventas período anterior", C.es_escala(v_prev) if has_prior else "—")
         kpi(k[1], "Ventas selección", C.es_escala(v_cur))
         kpi(k[2], "Variación vs año anterior",
-            f"<span style='color:{C.color(dif, has_prior)}' title='{tipv}'>{C.arrow(dif, has_prior)} {C.es_escala(dif)}</span>",
+            f"<span style='color:{C.color(dif, has_prior)}'>{C.arrow(dif, has_prior)} {C.es_escala(dif)}</span>",
             f"<span style='color:{C.color(dif, has_prior)}'>{C.es_pct(dif/v_prev if v_prev else 0)}</span>")
         kpi(k[3], "Market Share", C.es_pct(ms))
         kpi(k[4], "BPS", f"<span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span>")
@@ -244,29 +241,50 @@ def page_vista():
             return C.bps(msc, C.market_share(comp, mkt, C.window(a_chart, tipo, "prev")))
         return C.market_share(comp, mkt, C.window(a_chart, tipo, var))
 
+    def fmtval(v):
+        # el tooltip muestra el valor según la métrica del gráfico:
+        # % para Market Share · número para BPS · valor absoluto adaptativo para Ventas.
+        if metr == "Market Share":
+            return C.es_pct(v)
+        if metr == "BPS":
+            return C.es_num(v)
+        return C.es_escala(v)
+    htmpl = "%{fullData.name}<br><b>%{customdata}</b><extra></extra>"
+
     g1, g2 = st.columns(2)
     tipos = ["MES", "L4M", "YTD", "TAM"]
     fig = go.Figure()
     if metr == "BPS":
-        fig.add_bar(x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
+        yv = [val(t, "current") for t in tipos]
+        fig.add_bar(name="BPS", x=tipos, y=yv, marker_color=C.NAVY,
+                    customdata=[fmtval(v) for v in yv],
+                    hovertemplate="<b>%{customdata}</b><extra></extra>")
     else:
-        fig.add_bar(name="Período Actual", x=tipos, y=[val(t, "current") for t in tipos], marker_color=C.NAVY)
-        fig.add_bar(name="Período Anterior", x=tipos, y=[val(t, "prev") for t in tipos], marker_color=C.ACCENT)
+        ya = [val(t, "current") for t in tipos]
+        yp = [val(t, "prev") for t in tipos]
+        fig.add_bar(name="Período Actual", x=tipos, y=ya, marker_color=C.NAVY,
+                    customdata=[fmtval(v) for v in ya], hovertemplate=htmpl)
+        fig.add_bar(name="Período Anterior", x=tipos, y=yp, marker_color=C.ACCENT,
+                    customdata=[fmtval(v) for v in yp], hovertemplate=htmpl)
     fig.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
                       showlegend=False, separators=",.")
     g1.plotly_chart(fig, width="stretch")
 
     # mensual: depende solo del año (ignora el filtro de meses), 12 meses vs año anterior
     yr = chart_year
-    figm = go.Figure()
     def mval(m, y):
         per = y * 100 + m
         if per not in C.PERIODS:
             return 0
         return (C.ventas(comp, [per]) if metr == "Ventas"
                 else C.market_share(comp, mkt, [per]))
-    figm.add_bar(name="Período Actual", x=C.MESES, y=[mval(m, yr) for m in range(1, 13)], marker_color=C.NAVY)
-    figm.add_bar(name="Período Anterior", x=C.MESES, y=[mval(m, yr - 1) for m in range(1, 13)], marker_color=C.ACCENT)
+    ma = [mval(m, yr) for m in range(1, 13)]
+    mp = [mval(m, yr - 1) for m in range(1, 13)]
+    figm = go.Figure()
+    figm.add_bar(name="Período Actual", x=C.MESES, y=ma, marker_color=C.NAVY,
+                 customdata=[fmtval(v) for v in ma], hovertemplate=htmpl)
+    figm.add_bar(name="Período Anterior", x=C.MESES, y=mp, marker_color=C.ACCENT,
+                 customdata=[fmtval(v) for v in mp], hovertemplate=htmpl)
     figm.update_layout(height=235, barmode="group", margin=dict(l=10, r=10, t=10, b=10),
                        showlegend=False, separators=",.")
     g2.plotly_chart(figm, width="stretch")
