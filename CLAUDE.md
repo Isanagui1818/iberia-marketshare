@@ -76,7 +76,8 @@ Same 8-page report in BI-as-code (SQL + Markdown). Built, run and verified local
 SvelteKit scaffolding (`package.json`, etc.) is committed (`npm install && npm run sources &&
 npm run dev`). Period = Año + Mes `ButtonGroup`s; the window type is a third `ButtonGroup`;
 measures + period windows are computed **in the page queries** (a `pidx` month index). The
-year/month multi-select is **not yet ported** to Evidence (TODO).
+year/month multi-select and other Streamlit refinements are **not yet ported** to Evidence —
+full handoff checklist in **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
 
 ## Comparison convention (both dashboards)
 green ▲ up vs prior period · red ▼ down · orange – no change · gray ○ no prior period.
