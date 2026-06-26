@@ -1,12 +1,12 @@
+> [!NOTE]
+> _Built, run and verified locally — every page renders with data and no errors in the
+> Evidence dev server. Publication pending (Evidence Cloud / Netlify)._
+
 # Evidence.dev dashboard
 
 BI-as-code version of the report: SQL queries + Markdown render an interactive site.
 Git-native and deployable free (Netlify/Vercel/Evidence Cloud). It mirrors the
 **8-page structure of the Streamlit build**, on the same synthetic star schema.
-
-> [!NOTE]
-> _Built, run and verified locally — every page renders with data and no errors in the
-> Evidence dev server. Publication pending (Evidence Cloud / Netlify)._
 
 ## Setup
 
