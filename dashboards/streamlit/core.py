@@ -158,10 +158,10 @@ def es_pct(v, dec=1):
 
 
 def arrow(v, has_prior=True):
-    # ▲ sube · ▼ baja · — sin variación (o sin comparativa cuando has_prior=False)
+    # ▲ sube · ▼ baja · – sin variación (naranja) · ○ sin comparativa (gris)
     if not has_prior:
-        return "—"
-    return "▲" if v > 0 else ("▼" if v < 0 else "—")
+        return "○"
+    return "▲" if v > 0 else ("▼" if v < 0 else "–")
 
 
 def color(v, has_prior=True):

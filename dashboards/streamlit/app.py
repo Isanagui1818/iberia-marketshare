@@ -247,19 +247,19 @@ def page_vista():
     top = ct.head(7).iloc[::-1]
     b1.markdown("**Top 7 en Ventas**")
     # Color según comparación con el período anterior: verde sube · rojo baja · naranja sin
-    # variación · gris si no hay período anterior con el que comparar. Tooltip de 2 líneas:
-    # valor absoluto y variación vs período anterior.
-    cdata = [[f"Total: {C.es_mill(v)}",
-              (f"Var. vs ant.: {C.arrow(cr, has_prior)} {C.es_mill(cr)}" if has_prior
-               else "Sin período anterior")]
-             for v, cr in zip(top["Ventas"], top["Crecimiento Ventas"])]
+    # variación · gris sin comparativa. Tooltip de 2 líneas: valor absoluto (arriba) y, debajo,
+    # solo el caso pertinente con su símbolo y el valor de la diferencia vs período anterior.
+    barcolors = [C.color(cr, has_prior) for cr in top["Crecimiento Ventas"]]
+    def _var(cr):
+        return f"{C.arrow(cr, has_prior)} {C.es_num(cr)}" if has_prior else "○ sin comparativa"
+    cdata = [[C.es_num(v), _var(cr)] for v, cr in zip(top["Ventas"], top["Crecimiento Ventas"])]
     figb = go.Figure(go.Bar(x=top["Ventas"], y=top["Compañía"], orientation="h",
-                            marker_color=[C.color(cr, has_prior) for cr in top["Crecimiento Ventas"]],
+                            marker_color=barcolors,
                             text=[C.es_mill(v) for v in top["Ventas"]], textposition="outside",
                             cliponaxis=False, customdata=cdata,
-                            hovertemplate="%{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
-    figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10),
-                       hoverlabel=dict(align="left"))
+                            hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
+                            hoverlabel=dict(bgcolor=barcolors, font=dict(color="white"), align="left")))
+    figb.update_layout(height=250, margin=dict(l=10, r=70, t=10, b=10))
     b1.plotly_chart(figb, width="stretch")
     disp = ct.copy()
     sty = (disp.style
@@ -359,16 +359,18 @@ def page_segmento():
         b = C.bps(msc, msp, has_prior)
         g = (vc / vp - 1) if vp else 0
         dif = vc - vp
-        var_txt = (f"Var. vs ant.: {C.arrow(dif, has_prior)} {C.es_mill(dif)}" if has_prior
-                   else "Sin período anterior")
+        var_txt = (f"{C.arrow(dif, has_prior)} {C.es_num(dif)}" if has_prior
+                   else "○ sin comparativa")
         # barra del período actual en verde/rojo/naranja/gris según comparación con el anterior
         fig = go.Figure(go.Bar(x=[f"{tipo}-1", tipo], y=[vp, vc],
                                marker_color=[C.ACCENT, C.color(dif, has_prior)],
-                               customdata=[[f"Total: {C.es_mill(vp)}", ""],
-                                           [f"Total: {C.es_mill(vc)}", var_txt]],
-                               hovertemplate="%{customdata[0]}<br>%{customdata[1]}<extra></extra>"))
+                               customdata=[[C.es_num(vp), "período anterior"],
+                                           [C.es_num(vc), var_txt]],
+                               hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
+                               hoverlabel=dict(bgcolor=[C.ACCENT, C.color(dif, has_prior)],
+                                               font=dict(color="white"), align="left")))
         fig.update_layout(height=185, margin=dict(l=6, r=6, t=30, b=6), title=name,
-                          showlegend=False, hoverlabel=dict(align="left"))
+                          showlegend=False)
         col.plotly_chart(fig, width="stretch")
         col.markdown(f"**BPS:** <span style='color:{C.color(b, has_prior)}'>{C.arrow(b, has_prior)} {C.es_num(b)}</span> · "
                      f"**%Crec.:** <span style='color:{C.color(g, has_prior)}'>{C.arrow(g, has_prior)} {C.es_pct(g)}</span>",
