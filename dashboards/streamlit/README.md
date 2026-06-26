@@ -20,9 +20,15 @@ market performance + Top 7) · `Performance` (field/KPI selectors, full metrics 
 ## Files
 
 - `app.py` — navigation (tab-style top nav), shared filter bar, the 8 page renderers.
-- `core.py` — data load, the period framework (MES/L4M/YTD/TAM + `-1`/LY), the measures
-  (Ventas, Market Share, BPS, %Peso, growth), Top-N and Spanish number formatting.
+- `core.py` — data load, the period framework (MES/L4M/YTD/TAM + `-1`/LY, with empty
+  windows at the data boundary), the measures (Ventas, Market Share, BPS, %Peso, growth),
+  the comparison colors/arrows and Spanish number formatting.
 - `.streamlit/config.toml` — navy/blue theme matching the report.
+
+**Comparison convention** (charts, tables, KPIs): green ▲ up vs prior period · red ▼ down ·
+orange – no change · gray ○ no prior period to compare. **BPS returns 0** when there is no
+prior period. Bars show a 2-line hover tooltip: absolute total + variation vs the prior
+period.
 
 ## Run locally
 
