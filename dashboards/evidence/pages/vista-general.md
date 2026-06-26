@@ -80,8 +80,11 @@ select
     case when mkt_cur  = 0 then null else comp_cur  / mkt_cur  end as ms_cur,
     case when mkt_prev = 0 then null else comp_prev / mkt_prev end as ms_prev,
     case when mkt_prev = 0 then null else mkt_cur / mkt_prev - 1 end as pct_var,
-    case when mkt_cur = 0 or mkt_prev = 0 then null
-         else (comp_cur / mkt_cur - comp_prev / mkt_prev) * 10000 end as bps
+    -- BPS es una diferencia entre dos períodos: sin período anterior devolvemos 0 (no un
+    -- valor irreal de restar contra una cuota inexistente).
+    case when mkt_cur is null or mkt_cur = 0       then null
+         when mkt_prev is null or mkt_prev = 0     then 0
+         else (comp_cur / mkt_cur - coalesce(comp_prev, 0) / mkt_prev) * 10000 end as bps
 from m
 ```
 
@@ -187,8 +190,12 @@ agg as (
 select
     compania,
     ventas,
-    case when ventas - coalesce(ventas_prev, 0) >= 0 then ventas end as "Mejora vs anterior",
-    case when ventas - coalesce(ventas_prev, 0) <  0 then ventas end as "Empeora vs anterior"
+    -- Color según comparación con el período anterior. ventas_prev es NULL cuando no hay
+    -- período anterior con el que comparar (p. ej. 2022-01) -> gris.
+    case when ventas_prev is not null and ventas - ventas_prev > 0 then ventas end as "Sube",
+    case when ventas_prev is not null and ventas - ventas_prev < 0 then ventas end as "Baja",
+    case when ventas_prev is not null and ventas - ventas_prev = 0 then ventas end as "Sin cambio",
+    case when ventas_prev is null then ventas end                                  as "Sin comparativa"
 from agg
 order by ventas desc
 limit 7
@@ -197,10 +204,10 @@ limit 7
 <BarChart
     data={vg_top7}
     x=compania
-    y={['Mejora vs anterior', 'Empeora vs anterior']}
+    y={['Sube', 'Baja', 'Sin cambio', 'Sin comparativa']}
     swapXY=true
     type=stacked
-    colorPalette={['#2E9E5B', '#D23B3B']}
+    colorPalette={['#2E9E5B', '#D23B3B', '#E8941A', '#888888']}
     yAxisTitle="Ventas"
 />
 

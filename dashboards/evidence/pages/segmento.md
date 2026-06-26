@@ -71,10 +71,12 @@ t as (
 )
 select
     category, cur, prev,
-    cur - prev as crecimiento,
-    case when prev = 0 then null else cur / prev - 1 end as pct_crec,
-    case when (select mkt_cur from tot) = 0 or (select mkt_prev from tot) = 0 then null
-         else (cur / (select mkt_cur from tot) - prev / (select mkt_prev from tot)) * 10000 end as bps
+    cur - coalesce(prev, 0) as crecimiento,
+    case when prev is null or prev = 0 then null else cur / prev - 1 end as pct_crec,
+    -- BPS = 0 cuando no hay período anterior con el que comparar (en vez de un valor irreal).
+    case when (select mkt_cur from tot) is null or (select mkt_cur from tot) = 0   then null
+         when (select mkt_prev from tot) is null or (select mkt_prev from tot) = 0 then 0
+         else (cur / (select mkt_cur from tot) - coalesce(prev, 0) / (select mkt_prev from tot)) * 10000 end as bps
 from t
 where cur > 0
 order by cur desc
