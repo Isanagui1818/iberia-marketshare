@@ -55,13 +55,42 @@ in `powerbi/dax/` (bulk-create with `tabular_editor_bulk.csx`).
 ## Streamlit app (`dashboards/streamlit/`)
 8 pages: Menú · Glosario · Vista General · Performance · Evolución · Segmento de Mercado ·
 Birth Rate · Informe Dinámico. `app.py` = nav + pages; `core.py` = data load, the period
-windows, the measures and Spanish formatting. Theme navy `#002060` / accent `#1467BC`.
+windows/measures and Spanish formatting. Theme navy `#002060` / accent `#1467BC`.
 Run: `cd dashboards/streamlit && pip install -r requirements.txt && python -m streamlit run app.py`.
+- **Period selection**: Año + Mes are **multi-select** (with a "Todos" option), defaulting to
+  the latest period. `core.resolve(years, months, tipo)` returns `(cur, prev, has_prior, multi)`:
+  a single (year, month) keeps the MES/L4M/YTD/TAM window model (compare vs the preceding
+  block); multiple months/years sum the selection and compare vs the same months with the
+  year(s) shifted back by the number of selected years (YoY). In multi mode the per-page
+  MES/L4M/YTD/TAM selectors are hidden. `company_table`/`breakdown_table` take resolved
+  `cur`/`prev` lists.
+- **Vista General** increment charts depend only on the YEAR (not the month filter).
+- `core.window` returns an **empty** prev/ly window at the data boundary (no negative slicing).
+
+## Evidence dashboard (`dashboards/evidence/`)
+Same 8-page report in BI-as-code (SQL + Markdown). Built, run and verified locally; the
+SvelteKit scaffolding (`package.json`, etc.) is committed (`npm install && npm run sources &&
+npm run dev`). Period = Año + Mes `ButtonGroup`s; the window type is a third `ButtonGroup`;
+measures + period windows are computed **in the page queries** (a `pidx` month index). The
+year/month multi-select is **not yet ported** to Evidence (TODO).
+
+## Comparison convention (both dashboards)
+green ▲ up vs prior period · red ▼ down · orange – no change · gray ○ no prior period.
+**BPS returns 0** when there is no prior period (instead of an unreal value). Streamlit bars
+show a 2-line hover tooltip (absolute total + variation vs prior); Evidence's tooltip is
+limited by the chart component.
 
 ## Conventions / gotchas
-- Streamlit: launch with `streamlit run` (not `python`). KPI/menu styling lives in the CSS
-  block at the top of `app.py`; menu buttons use `st-key-mb_*` classes for navy styling.
-- Number format is Spanish (`68,9 mill.`, `19,6 %`) via `core.es_*` helpers.
+- Streamlit: launch with `streamlit run` (not `python`); after editing code, **restart** the
+  server (a browser refresh keeps the old module in memory). KPI/menu styling lives in the CSS
+  block at the top of `app.py`; menu buttons use `st-key-mb_*` classes.
+- Number format is European/Spanish (`68,9 mill.`, `19,6 %`) via `core.es_*`; `es_escala`
+  picks mill./mil/units. Plotly charts use `separators=",."`.
+- **Evidence gotchas**: a `ButtonGroup` value is read as `${inputs.name}` (not `.value`, that's
+  for Dropdowns) and its default goes on a `ButtonGroupItem` (`defaultValue=`). Evidence does
+  **not** expose a reactive (input-driven) query as a table to other queries, so the period
+  CTE is **inlined** into each query (no `from other_query`). A numeric dropdown default needs
+  `defaultValue={202412}` (not a string).
 - The synthetic workbook (`data/synthetic/*.xlsx`) is gitignored; the CSVs in
   `dashboards/data/` are committed (synthetic → safe) so the apps deploy self-contained.
 - When the dataset changes, re-export the CSVs and keep `sql/04_gold_star_schema` in sync.
