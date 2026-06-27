@@ -38,18 +38,16 @@ select distinct metric from marketshare.fact_full order by 1
     <ButtonGroupItem valueLabel="L3M" value="L3M" />
 </ButtonGroup>
 
-## Categorías — {inputs.win} vs {inputs.win}-1
-
-<!-- CTE base reutilizada (incrustada en cada consulta: Evidence no encadena consultas reactivas). -->
+## Categorías
 
 ```sql seg_cat
 with base as (
     select f.category, f.value,
         case
-            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3 and a.aidx     then 'cur'
-            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7 and a.aidx - 4 then 'prev'
-            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 2 and a.aidx     then 'cur'
-            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 5 and a.aidx - 3 then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx       then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4   then 'prev'
+            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 2  and a.aidx       then 'cur'
+            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 5  and a.aidx - 3   then 'prev'
         end as bucket
     from marketshare.fact_full f
     cross join (
@@ -68,17 +66,34 @@ t as (
         sum(value) filter (where bucket = 'cur')  as cur,
         sum(value) filter (where bucket = 'prev') as prev
     from base where bucket is not null group by 1
+),
+agg as (
+    select
+        category, cur, prev,
+        cur - coalesce(prev, 0) as crecimiento,
+        case when prev is null or prev = 0 then null else cur / prev - 1 end as pct_crec,
+        case when (select mkt_cur  from tot) is null or (select mkt_cur  from tot) = 0 then null
+             when (select mkt_prev from tot) is null or (select mkt_prev from tot) = 0 then 0
+             else (cur / (select mkt_cur from tot) - coalesce(prev,0) / (select mkt_prev from tot)) * 10000
+        end as bps
+    from t
+    where cur > 0
 )
 select
-    category, cur, prev,
-    cur - coalesce(prev, 0) as crecimiento,
-    case when prev is null or prev = 0 then null else cur / prev - 1 end as pct_crec,
-    -- BPS = 0 cuando no hay período anterior con el que comparar (en vez de un valor irreal).
-    case when (select mkt_cur from tot) is null or (select mkt_cur from tot) = 0   then null
-         when (select mkt_prev from tot) is null or (select mkt_prev from tot) = 0 then 0
-         else (cur / (select mkt_cur from tot) - coalesce(prev, 0) / (select mkt_prev from tot)) * 10000 end as bps
-from t
-where cur > 0
+    category, cur, prev, crecimiento, pct_crec, bps,
+    replace(printf('%,d', cast(round(cur) as bigint)), ',', '.') as cur_fmt,
+    replace(printf('%,d', cast(round(coalesce(prev,0)) as bigint)), ',', '.') as prev_fmt,
+    case when pct_crec is null then '–'
+         when pct_crec > 0 then '<span style="color:#2E9E5B">▲ ' || replace(printf('%.1f', pct_crec * 100), '.', ',') || ' %</span>'
+         when pct_crec < 0 then '<span style="color:#D23B3B">▼ ' || replace(printf('%.1f', abs(pct_crec) * 100), '.', ',') || ' %</span>'
+         else '<span style="color:#E8941A">– 0,0 %</span>'
+    end as pct_crec_html,
+    case when bps is null then '–'
+         when bps > 0 then '<span style="color:#2E9E5B">▲ ' || replace(printf('%.1f', bps), '.', ',') || '</span>'
+         when bps < 0 then '<span style="color:#D23B3B">▼ ' || replace(printf('%.1f', abs(bps)), '.', ',') || '</span>'
+         else '<span style="color:#E8941A">– 0</span>'
+    end as bps_html
+from agg
 order by cur desc
 ```
 
@@ -86,10 +101,10 @@ order by cur desc
 with base as (
     select f.category, f.value,
         case
-            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3 and a.aidx     then 'cur'
-            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7 and a.aidx - 4 then 'prev'
-            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 2 and a.aidx     then 'cur'
-            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 5 and a.aidx - 3 then 'prev'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx       then 'cur'
+            when '${inputs.win}' = 'L4M' and f.pidx between a.aidx - 7  and a.aidx - 4   then 'prev'
+            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 2  and a.aidx       then 'cur'
+            when '${inputs.win}' = 'L3M' and f.pidx between a.aidx - 5  and a.aidx - 3   then 'prev'
         end as bucket
     from marketshare.fact_full f
     cross join (
@@ -105,9 +120,9 @@ t as (
     from base where bucket is not null group by 1
     having sum(value) filter (where bucket = 'cur') > 0
 )
-select category, '${inputs.win}'   as periodo, cur  as ventas from t
+select category, '${inputs.win}' as periodo, cur as ventas from t
 union all
-select category, '${inputs.win}-1' as periodo, prev as ventas from t
+select category, '${inputs.win}' || '-1' as periodo, prev as ventas from t
 ```
 
 <BarChart
@@ -121,9 +136,9 @@ select category, '${inputs.win}-1' as periodo, prev as ventas from t
 />
 
 <DataTable data={seg_cat} rows=12>
-    <Column id=category    title="Categoría" />
-    <Column id=cur         title="Ventas {inputs.win}"   fmt="#,##0" />
-    <Column id=prev        title="Ventas {inputs.win}-1" fmt="#,##0" />
-    <Column id=pct_crec    title="%Crecimiento" fmt="0.0%"  contentType=delta />
-    <Column id=bps         title="BPS"          fmt="#,##0" contentType=delta />
+    <Column id=category      title="Categoría" />
+    <Column id=cur_fmt       title="Ventas" />
+    <Column id=prev_fmt      title="Ventas -1" />
+    <Column id=pct_crec_html title="%Crecimiento" contentType=html />
+    <Column id=bps_html      title="BPS"          contentType=html />
 </DataTable>

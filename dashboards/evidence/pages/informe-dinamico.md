@@ -34,25 +34,25 @@ select distinct metric from marketshare.fact_full order by 1
 </ButtonGroup>
 
 <Dropdown name=dim1 title="Campo 1 (filas)" defaultValue="manufacturer">
-    <DropdownOption valueLabel="Compañía"     value="manufacturer" />
-    <DropdownOption valueLabel="Categoría"    value="category" />
-    <DropdownOption valueLabel="SubCategoría" value="sub_category" />
+    <DropdownOption valueLabel="Compañía"        value="manufacturer" />
+    <DropdownOption valueLabel="Categoría"       value="category" />
+    <DropdownOption valueLabel="SubCategoría"    value="sub_category" />
     <DropdownOption valueLabel="Área de Negocio" value="business_area" />
-    <DropdownOption valueLabel="Marca"        value="brand" />
-    <DropdownOption valueLabel="Producto"     value="product" />
-    <DropdownOption valueLabel="Canal"        value="channel" />
-    <DropdownOption valueLabel="Market"       value="market" />
+    <DropdownOption valueLabel="Marca"           value="brand" />
+    <DropdownOption valueLabel="Producto"        value="product" />
+    <DropdownOption valueLabel="Canal"           value="channel" />
+    <DropdownOption valueLabel="Market"          value="market" />
 </Dropdown>
 
 <Dropdown name=dim2 title="Campo 2 (columnas/filas)" defaultValue="category">
-    <DropdownOption valueLabel="(ninguno)"    value="metric" />
-    <DropdownOption valueLabel="Compañía"     value="manufacturer" />
-    <DropdownOption valueLabel="Categoría"    value="category" />
-    <DropdownOption valueLabel="SubCategoría" value="sub_category" />
+    <DropdownOption valueLabel="(ninguno)"       value="metric" />
+    <DropdownOption valueLabel="Compañía"        value="manufacturer" />
+    <DropdownOption valueLabel="Categoría"       value="category" />
+    <DropdownOption valueLabel="SubCategoría"    value="sub_category" />
     <DropdownOption valueLabel="Área de Negocio" value="business_area" />
-    <DropdownOption valueLabel="Marca"        value="brand" />
-    <DropdownOption valueLabel="Canal"        value="channel" />
-    <DropdownOption valueLabel="Market"       value="market" />
+    <DropdownOption valueLabel="Marca"           value="brand" />
+    <DropdownOption valueLabel="Canal"           value="channel" />
+    <DropdownOption valueLabel="Market"          value="market" />
 </Dropdown>
 
 <ButtonGroup name=win title="Ventana de período">
@@ -63,33 +63,38 @@ select distinct metric from marketshare.fact_full order by 1
 </ButtonGroup>
 
 ```sql dinamico
-with p as (
-    select
-        cast('${inputs.anio}' as integer)                     as ayear,
-        cast('${inputs.anio}' as integer) * 12
-          + cast('${inputs.mes}' as integer)                 as aidx
+with a as (
+    select cast('${inputs.anio}' as integer) as ayear,
+           cast('${inputs.anio}' as integer) * 12
+             + cast('${inputs.mes}' as integer) as aidx
 ),
-base as (
-    select f.*
+agg as (
+    select
+        ${inputs.dim1.value} as dimension_1,
+        ${inputs.dim2.value} as dimension_2,
+        sum(f.value) as ventas
     from marketshare.fact_full f
-    cross join p
+    cross join a
     where f.metric = '${inputs.metrica.value}'
       and (
-        ('${inputs.win}' = 'MES' and f.pidx = p.aidx)
-        or ('${inputs.win}' = 'L4M' and f.pidx between p.aidx - 3  and p.aidx)
-        or ('${inputs.win}' = 'TAM' and f.pidx between p.aidx - 11 and p.aidx)
-        or ('${inputs.win}' = 'YTD' and f.year = p.ayear and f.pidx <= p.aidx)
+           ('${inputs.win}' = 'MES' and f.pidx = a.aidx)
+        or ('${inputs.win}' = 'L4M' and f.pidx between a.aidx - 3  and a.aidx)
+        or ('${inputs.win}' = 'TAM' and f.pidx between a.aidx - 11 and a.aidx)
+        or ('${inputs.win}' = 'YTD' and f.year = a.ayear and f.pidx <= a.aidx)
       )
+    group by 1, 2
 )
 select
-    ${inputs.dim1.value} as dimension_1,
-    ${inputs.dim2.value} as dimension_2,
-    sum(value)           as "Ventas ${inputs.win}"
-from base
-group by 1, 2
-order by 3 desc
+    dimension_1, dimension_2, ventas,
+    replace(printf('%,d', cast(round(ventas) as bigint)), ',', '.') as ventas_fmt
+from agg
+order by ventas desc
 ```
 
-## Resultado — {inputs.win} · {inputs.metrica.value}
+## Resultado — {inputs.metrica.value}
 
-<DataTable data={dinamico} rows=25 search=true totalRow=true downloadable=true />
+<DataTable data={dinamico} rows=25 search=true totalRow=true downloadable=true>
+    <Column id=dimension_1 title="Campo 1" />
+    <Column id=dimension_2 title="Campo 2" />
+    <Column id=ventas_fmt  title="Ventas" />
+</DataTable>

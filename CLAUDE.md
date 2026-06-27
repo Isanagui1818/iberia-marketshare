@@ -75,9 +75,19 @@ Run: `cd dashboards/streamlit && pip install -r requirements.txt && python -m st
 Same 8-page report in BI-as-code (SQL + Markdown). Built, run and verified locally; the
 SvelteKit scaffolding (`package.json`, etc.) is committed (`npm install && npm run sources &&
 npm run dev`). Period = Año + Mes `ButtonGroup`s; the window type is a third `ButtonGroup`;
-measures + period windows are computed **in the page queries** (a `pidx` month index). The
-year/month multi-select and other Streamlit refinements are **not yet ported** to Evidence —
-full handoff checklist in **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
+measures + period windows are computed **in the page queries** (a `pidx` month index).
+- **Number formatting is done in SQL** (DuckDB has no locale `format`): European/Spanish
+  style (`1.234.567`, `19,6 %`) via `printf` + `replace`; adaptive scale `es_escala`
+  (mill./mil/units) and adaptive-decimals BPS `es_sig` likewise. Tables expose `*_fmt`
+  string columns and colored `*_html` delta columns (`<Column contentType=html />`) instead
+  of `fmt=` + `contentType=delta`, to match the green▲/red▼/orange–/gray○ convention.
+- **Vista General Top 7** uses a custom `echartsOptions` tooltip: absolute total colored by
+  legend state + arrow & signed delta vs prior (per-row `crecimiento` looked up from the
+  query rows inside the formatter).
+- The Streamlit **year/month multi-select** was attempted (Dropdown `multiple=true` + a
+  multi/single CTE) but **reverted** — it broke rendering; Evidence stays single-select
+  `ButtonGroup`s. Remaining gaps + the multi-select handoff are in
+  **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
 
 ## Comparison convention (both dashboards)
 green ▲ up vs prior period · red ▼ down · orange – no change · gray ○ no prior period.
@@ -94,8 +104,15 @@ limited by the chart component.
 - **Evidence gotchas**: a `ButtonGroup` value is read as `${inputs.name}` (not `.value`, that's
   for Dropdowns) and its default goes on a `ButtonGroupItem` (`defaultValue=`). Evidence does
   **not** expose a reactive (input-driven) query as a table to other queries, so the period
-  CTE is **inlined** into each query (no `from other_query`). A numeric dropdown default needs
-  `defaultValue={202412}` (not a string).
+  CTE **and any `*_fmt`/`*_html` formatting columns are inlined** into the same query via an
+  `agg` CTE — never `select … from <reactive_query>` (that throws `Catalog Error: Table …
+  does not exist`). A numeric dropdown default needs `defaultValue={202412}` (not a string).
+  For a custom ECharts tooltip/config, pass `echartsOptions={…}` (applied last via
+  `setOption`), **not** `options={…}` (silently overwritten by Evidence's config build).
+- **Cloud-synced repo**: this working copy is under a synced `Documents/` folder. The sync
+  tool drops `+page (# Edit conflict … #).md` files into the generated `.evidence/template/`,
+  which 500s the whole dev server (`Files prefixed with + are reserved`). Fix: delete any
+  `*Edit conflict*` files under `dashboards/evidence/.evidence/` and restart `npm run dev`.
 - The synthetic workbook (`data/synthetic/*.xlsx`) is gitignored; the CSVs in
   `dashboards/data/` are committed (synthetic → safe) so the apps deploy self-contained.
 - When the dataset changes, re-export the CSVs and keep `sql/04_gold_star_schema` in sync.

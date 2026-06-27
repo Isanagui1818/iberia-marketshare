@@ -51,7 +51,9 @@ select
     f.period_name,
     f.${inputs.campo.value} as dimension,
     sum(f.value)                  as ventas,
-    sum(f.value) / max(m.market)  as cuota
+    sum(f.value) / max(m.market)  as cuota,
+    replace(printf('%,d', cast(round(sum(f.value)) as bigint)), ',', '.') as ventas_fmt,
+    replace(printf('%.1f', sum(f.value) / max(m.market) * 100), '.', ',') || ' %' as cuota_fmt
 from marketshare.fact_full f
 join mkt m on f.period_id = m.period_id
 where f.metric = '${inputs.metrica.value}'
@@ -75,6 +77,6 @@ order by 1
 <DataTable data={ev_series} rows=12 search=true>
     <Column id=period_name title="Período" />
     <Column id=dimension   title="Miembro" />
-    <Column id=ventas      title="Ventas" fmt="#,##0" />
-    <Column id=cuota       title="Market Share" fmt="0.0%" />
+    <Column id=ventas_fmt  title="Ventas" />
+    <Column id=cuota_fmt   title="Market Share" />
 </DataTable>

@@ -50,6 +50,22 @@ npm run dev          # open http://localhost:3000
 - **Comparison colors**: green = up vs prior period · red = down · orange = no change ·
   gray = no prior period to compare. **BPS returns 0** when there is no prior period
   (instead of an unreal value).
+- **European/Spanish number format** (`1.234.567`, `19,6 %`) is produced **in SQL** with
+  `printf` + `replace` (DuckDB has no locale-aware `format`): integers via
+  `replace(printf('%,d', x), ',', '.')`, percentages via
+  `replace(printf('%.1f', x*100), '.', ',') || ' %'`. The adaptive scale (`mill.`/`mil`/
+  units, `es_escala`) and the adaptive-decimals BPS (`es_sig`) are computed the same way.
+- **Colored delta columns** in the tables: each `pct_crec` / `crecimiento` / `bps` ships a
+  sibling `_html` column built in SQL (`'<span style="color:#2E9E5B">▲ …</span>'`) and is
+  rendered with `<Column contentType=html />` — this gives the arrow + value + color of the
+  Streamlit/Power BI convention, which Evidence's built-in `contentType=delta` can't fully
+  reproduce.
+- **Typed tooltip on the Top 7 chart** (Vista General): the stacked horizontal `BarChart`
+  passes a custom `echartsOptions={{ tooltip: { formatter } }}`. The formatter finds the
+  active (non-zero) stack series, shows the absolute total colored by the legend state and,
+  below it, the arrow + signed difference vs the prior period. The per-row `crecimiento` is
+  looked up from the query rows inside the formatter (ECharts only receives the x/y columns
+  in `params.data`).
 
 > A `periods.sql` source is also included (distinct loaded periods) in case you prefer a
 > period dropdown over the Año/Mes button groups.
@@ -57,6 +73,26 @@ npm run dev          # open http://localhost:3000
 > If `read_csv_auto('../data/...')` doesn't resolve in your Evidence version, copy the CSVs
 > from `dashboards/data/` into `sources/marketshare/` and change the paths to local
 > filenames (Evidence also auto-loads CSVs placed inside a source folder).
+
+## Gotchas (worth knowing before editing the pages)
+
+- **No query chaining off a reactive query.** Evidence won't expose an input-driven query
+  as a table to another query (`from other_query` → `Catalog Error: Table … does not
+  exist`). So the formatting columns (`*_fmt`, `*_html`) are **inlined into the same query**
+  via an `agg` CTE — never a separate `select … from <reactive_query>`. The period CTE is
+  inlined into every query for the same reason.
+- **Custom ECharts config goes through `echartsOptions`, not `options`.** `<BarChart
+  options={…}>` is overwritten by Evidence's own config build; `echartsOptions={…}` is
+  applied last via `chart.setOption()` and survives. The Top 7 tooltip relies on this.
+- **`ButtonGroup` vs `Dropdown` value.** A `ButtonGroup` value is read as `${inputs.name}`;
+  a `Dropdown` value as `${inputs.name.value}`. Año/Mes/Ventana are single-select
+  `ButtonGroup`s (the Streamlit multi-select is not ported here). A numeric dropdown default
+  needs `defaultValue={2024}` (number, not a string).
+- **Cloud-synced working copy.** This repo lives under a synced `Documents/` folder. The
+  sync tool can drop `+page (# Edit conflict … #).md` files into the generated
+  `.evidence/template/`, which crashes the dev server (`Files prefixed with + are
+  reserved`). If the whole site 500s, delete any `*Edit conflict*` files under
+  `dashboards/evidence/.evidence/` and restart `npm run dev`.
 
 ## Deploy
 
