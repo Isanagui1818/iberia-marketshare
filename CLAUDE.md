@@ -88,6 +88,24 @@ measures + period windows are computed **in the page queries** (a `pidx` month i
   multi/single CTE) but **reverted** — it broke rendering; Evidence stays single-select
   `ButtonGroup`s. Remaining gaps + the multi-select handoff are in
   **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
+- **Deploy = GitHub Pages**, via `.github/workflows/deploy-evidence.yml` (on push to `main`
+  + manual `workflow_dispatch`). It runs `npm ci && npm run sources && npm run build` inside
+  `dashboards/evidence` with **`BASE_PATH=/<repo-name>`** set (Evidence then emits into
+  `build/<repo-name>/`, so internal links resolve from the `/iberia-marketshare/` subpath),
+  uploads that dir as a Pages artifact and deploys it. Requires **Settings → Pages → Source =
+  GitHub Actions**. Public URL: `https://isanagui1818.github.io/iberia-marketshare/`.
+  Netlify/Vercel are alternatives (base dir `dashboards/evidence`, no base path needed);
+  Evidence Cloud has no free tier.
+- **Dependencies trimmed for security**: only the **DuckDB** datasource is kept; all unused
+  connectors (BigQuery, Snowflake, Databricks, Postgres, MySQL, MSSQL, SQLite, Trino,
+  MotherDuck, CSV, source-javascript) were removed from `package.json` + `evidence.config.yaml`
+  (they pulled a big vulnerable tree → ~64% fewer npm advisories). `typescript` is pinned to
+  `^5` in `overrides` (Evidence's `svelte2tsx` peer breaks on TS 6). Residual advisories are
+  Evidence's own build-time toolchain (vite/vitest/sveltekit) — npm's only fix is a breaking
+  downgrade to evidence v29, so left as-is (build-time only, not in the published site).
+  **Sandbox note**: `npm run sources` needs `extensions.duckdb.org` (DuckDB parquet wasm
+  extension), which the agent network policy blocks — it works in CI/locally; `evidence build`
+  itself completes here.
 
 ## Comparison convention (both dashboards)
 green ▲ up vs prior period · red ▼ down · orange – no change · gray ○ no prior period.
