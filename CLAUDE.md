@@ -90,9 +90,10 @@ measures + period windows are computed **in the page queries** (a `pidx` month i
   **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
 - **Deploy = GitHub Pages**, via `.github/workflows/deploy-evidence.yml` (on push to `main`
   + manual `workflow_dispatch`). It runs `npm ci && npm run sources && npm run build` inside
-  `dashboards/evidence` with **`BASE_PATH=/<repo-name>`** set (Evidence then emits into
-  `build/<repo-name>/`, so internal links resolve from the `/iberia-marketshare/` subpath),
-  uploads that dir as a Pages artifact and deploys it. Requires **Settings → Pages → Source =
+  `dashboards/evidence` with **`BASE_PATH=/<repo-name>`** set (this only prefixes internal
+  links/assets so they resolve from the `/iberia-marketshare/` subpath — Evidence always
+  writes the site to `build/`, **not** `build/<repo-name>/`), uploads `build/` as a Pages
+  artifact and deploys it. Requires **Settings → Pages → Source =
   GitHub Actions**. Public URL: `https://isanagui1818.github.io/iberia-marketshare/`.
   Netlify/Vercel are alternatives (base dir `dashboards/evidence`, no base path needed);
   Evidence Cloud has no free tier.

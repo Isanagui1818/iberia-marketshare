@@ -49,9 +49,10 @@ jobs:
 
       - name: Build Evidence site
         env:
-          # Evidence reads BASE_PATH and emits the site into build/<BASE_PATH>.
-          # Must match the GitHub Pages subpath (the repo name) so internal
-          # links resolve at https://<owner>.github.io/<repo>/.
+          # Evidence reads BASE_PATH to prefix internal links/assets (it does
+          # NOT change the output dir — the site is always written to ./build).
+          # Must match the GitHub Pages subpath (the repo name) so links resolve
+          # at https://<owner>.github.io/<repo>/.
           BASE_PATH: "/${{ github.event.repository.name }}"
         run: |
           npm run sources
@@ -64,8 +65,8 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Path is relative to the repo root (working-directory does not apply
-          # to action inputs). Evidence built into build/<repo-name>.
-          path: "dashboards/evidence/build/${{ github.event.repository.name }}"
+          # to action inputs). Evidence writes the site to ./build.
+          path: "dashboards/evidence/build"
 
   deploy:
     needs: build
