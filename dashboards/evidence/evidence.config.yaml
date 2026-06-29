@@ -65,17 +65,8 @@ plugins:
     "@evidence-dev/core-components": {}
 
   datasources:
-    # You can add additional datasources here by adding npm packages. 
-    # Make to also add them to `package.json`.
-    "@evidence-dev/bigquery": { }
-    "@evidence-dev/csv": { }
-    "@evidence-dev/databricks": { }
+    # This project uses only the in-memory DuckDB source (reads ../data/*.csv).
+    # Other connectors (BigQuery, Snowflake, Databricks, Postgres, …) were removed
+    # because they were unused and pulled in a large vulnerable dependency tree.
+    # To use another datasource, re-add its npm package here and in `package.json`.
     "@evidence-dev/duckdb": { }
-    "@evidence-dev/mssql": { }
-    "@evidence-dev/mysql": { }
-    "@evidence-dev/postgres": { }
-    "@evidence-dev/source-javascript": { }
-    "@evidence-dev/snowflake": { }
-    "@evidence-dev/sqlite": { }
-    "@evidence-dev/trino": { }
-    "@evidence-dev/motherduck": { }

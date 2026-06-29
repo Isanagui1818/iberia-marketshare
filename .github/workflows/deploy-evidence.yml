@@ -1,0 +1,79 @@
+name: Deploy Evidence dashboard to GitHub Pages
+
+# Publishes dashboards/evidence/ as a static site at
+# https://<owner>.github.io/<repo>/
+#
+# The Evidence project lives in a subfolder of this monorepo, so every build
+# step runs with working-directory: dashboards/evidence. The site reads its
+# data from ../data/*.csv (committed, synthetic), which resolves because the
+# whole repo is checked out — no secrets or external connections are needed.
+
+on:
+  # Deploy on every push to main.
+  push:
+    branches: [main]
+  # Allow manual runs from the Actions tab (works on any branch, useful to
+  # preview before merging to main).
+  workflow_dispatch:
+
+# Permissions required by actions/deploy-pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress production run.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboards/evidence
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: dashboards/evidence/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Evidence site
+        env:
+          # Evidence reads BASE_PATH and emits the site into build/<BASE_PATH>.
+          # Must match the GitHub Pages subpath (the repo name) so internal
+          # links resolve at https://<owner>.github.io/<repo>/.
+          BASE_PATH: "/${{ github.event.repository.name }}"
+        run: |
+          npm run sources
+          npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Path is relative to the repo root (working-directory does not apply
+          # to action inputs). Evidence built into build/<repo-name>.
+          path: "dashboards/evidence/build/${{ github.event.repository.name }}"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
