@@ -48,12 +48,11 @@ jobs:
         run: npm ci
 
       - name: Build Evidence site
-        env:
-          # Evidence reads BASE_PATH to prefix internal links/assets (it does
-          # NOT change the output dir — the site is always written to ./build).
-          # Must match the GitHub Pages subpath (the repo name) so links resolve
-          # at https://<owner>.github.io/<repo>/.
-          BASE_PATH: "/${{ github.event.repository.name }}"
+        # The Pages subpath (base path) is configured in evidence.config.yaml
+        # (deployment.basePath: /iberia-marketshare) — Evidence does NOT read a
+        # BASE_PATH env var. The base path prefixes internal links/assets so they
+        # resolve at https://<owner>.github.io/<repo>/; the site is always written
+        # to ./build (the base path does not change the output dir).
         run: |
           npm run sources
           npm run build

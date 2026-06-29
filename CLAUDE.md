@@ -90,11 +90,16 @@ measures + period windows are computed **in the page queries** (a `pidx` month i
   **`dashboards/evidence/PARITY_TODO.md`** (Streamlit is the reference).
 - **Deploy = GitHub Pages**, via `.github/workflows/deploy-evidence.yml` (on push to `main`
   + manual `workflow_dispatch`). It runs `npm ci && npm run sources && npm run build` inside
-  `dashboards/evidence` with **`BASE_PATH=/<repo-name>`** set (this only prefixes internal
-  links/assets so they resolve from the `/iberia-marketshare/` subpath — Evidence always
-  writes the site to `build/`, **not** `build/<repo-name>/`), uploads `build/` as a Pages
-  artifact and deploys it. Requires **Settings → Pages → Source =
-  GitHub Actions**. Public URL: `https://isanagui1818.github.io/iberia-marketshare/`.
+  `dashboards/evidence`, uploads `build/` as a Pages artifact and deploys it. The Pages
+  subpath (**base path**) is set in **`evidence.config.yaml` → `deployment.basePath:
+  /iberia-marketshare`** — Evidence reads the base path **only** from there (it does *not*
+  read a `BASE_PATH` env var; that was a prior bug → home loaded unstyled and every other
+  page 404'd because `_app/…` assets and nav links pointed at the domain root instead of the
+  `/iberia-marketshare/` subpath). The base path only prefixes internal links/assets; the
+  site is always written to `build/`, **not** `build/<repo-name>/`. Because it lives in the
+  config, **`npm run dev` also serves under `/iberia-marketshare/`** locally. Requires
+  **Settings → Pages → Source = GitHub Actions**. Public URL:
+  `https://isanagui1818.github.io/iberia-marketshare/`.
   Netlify/Vercel are alternatives (base dir `dashboards/evidence`, no base path needed);
   Evidence Cloud has no free tier.
 - **Dependencies trimmed for security**: only the **DuckDB** datasource is kept; all unused

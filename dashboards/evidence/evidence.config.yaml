@@ -1,3 +1,10 @@
+# Deploy under the GitHub Pages project subpath
+# (https://isanagui1818.github.io/iberia-marketshare/). Evidence reads the base
+# path ONLY from here — it prefixes every internal asset (_app/…) and page link.
+# Must match the repo name. NOTE: the BASE_PATH env var is NOT read by Evidence.
+deployment:
+  basePath: /iberia-marketshare
+
 appearance:
   default: system
   switcher: true
