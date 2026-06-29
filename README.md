@@ -68,7 +68,11 @@ dashboards/               BI layer on the synthetic data — 3 comparable builds
 The same synthetic data, surfaced three ways so you can compare —
 see [`dashboards/`](dashboards/): a **Streamlit** Python app (full dynamic
 period framework, tested), an **Evidence.dev** SQL/Markdown site, and a
-**Looker Studio** build kit. All deploy to a free public link.
+**Looker Studio** build kit. Two are already published to a free public link:
+
+- **Streamlit (live)** — <https://iberia-marketshare.streamlit.app/>
+- **Evidence (live)** — <https://isanagui1818.github.io/iberia-marketshare/> (GitHub Pages)
+- **Looker Studio** — build kit only (pending publication)
 
 ## Markets & sources
 

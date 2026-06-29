@@ -105,9 +105,13 @@ workflow:
 - **Triggers:** every push to `main`, plus manual runs from the **Actions** tab
   (`workflow_dispatch`) to preview a branch before merging.
 - **What it does:** runs `npm ci && npm run sources && npm run build` in
-  `dashboards/evidence` with `BASE_PATH=/<repo-name>` so internal links resolve from the
-  `/iberia-marketshare/` subpath, then uploads the build as a Pages artifact and deploys
-  it. No secrets or external connections — the data is committed synthetic CSVs.
+  `dashboards/evidence`, then uploads the build as a Pages artifact and deploys it. No
+  secrets or external connections — the data is committed synthetic CSVs.
+- **Base path:** the Pages subpath is set in `evidence.config.yaml` →
+  `deployment.basePath: /iberia-marketshare`. Evidence reads it **only** from there (it does
+  **not** read a `BASE_PATH` env var) and uses it to prefix every internal asset (`_app/…`)
+  and page link so they resolve under the `/iberia-marketshare/` subpath. Because it lives in
+  the config, `npm run dev` also serves under that subpath locally.
 
 ### One-time setup
 
@@ -127,5 +131,5 @@ gh run watch        # follow the latest run
 ```
 
 > **Alternatives:** Netlify/Vercel also work — set the base dir to `dashboards/evidence`,
-> build command `npm run sources && npm run build`, publish dir `build` (no `BASE_PATH`
-> needed when served from the domain root).
+> build command `npm run sources && npm run build`, publish dir `build`. When served from a
+> domain root, clear `deployment.basePath` in `evidence.config.yaml` (no subpath needed).
