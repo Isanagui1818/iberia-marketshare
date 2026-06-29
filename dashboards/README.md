@@ -1,14 +1,13 @@
-> [!WARNING]
-> _Streamlit is operational and published. Evidence is built (SQL + Markdown, mirrors the
-> same 8-page report), runs and has been verified locally — publication pending. Looker
-> Studio is still pending development._
+> [!NOTE]
+> _Streamlit and Evidence are both operational and published. Looker Studio is still
+> pending development._
 
 Each dashboard reimplements the Power BI report on the synthetic dataset. Once a dashboard
 is operational it is also **published online and can be consulted directly — no setup
 required:**
 
 - **Streamlit (live)** — **[📊iberia-marketshare.streamlit.app](https://iberia-marketshare.streamlit.app/)**
-- **Evidence** — _built & verified locally (`npm run dev`), publication pending_
+- **Evidence (live)** — **[📊isanagui1818.github.io/iberia-marketshare](https://isanagui1818.github.io/iberia-marketshare/)** (GitHub Pages)
 - **Looker Studio** — _pending development_
 
 The **Quick start** below is only needed if you want to **download the repo and run a
