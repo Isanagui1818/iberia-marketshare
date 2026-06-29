@@ -1,12 +1,13 @@
 > [!NOTE]
-> _Built, run and verified locally — every page renders with data and no errors in the
-> Evidence dev server. Publication pending (Evidence Cloud / Netlify)._
+> _Published on **GitHub Pages** at
+> <https://isanagui1818.github.io/iberia-marketshare/>, built and deployed automatically
+> on every push to `main`. Also runs locally with the Evidence dev server._
 
 # Evidence.dev dashboard
 
 BI-as-code version of the report: SQL queries + Markdown render an interactive site.
-Git-native and deployable free (Netlify/Vercel/Evidence Cloud). It mirrors the
-**8-page structure of the Streamlit build**, on the same synthetic star schema.
+Git-native and deployed free on **GitHub Pages** (Netlify/Vercel also work). It mirrors
+the **8-page structure of the Streamlit build**, on the same synthetic star schema.
 
 ## Setup
 
@@ -94,7 +95,37 @@ npm run dev          # open http://localhost:3000
   reserved`). If the whole site 500s, delete any `*Edit conflict*` files under
   `dashboards/evidence/.evidence/` and restart `npm run dev`.
 
-## Deploy
+## Deploy (GitHub Pages)
 
-Push to GitHub → connect the repo on **Evidence Cloud** (or Netlify) with build dir
-`dashboards/evidence` → public URL for the root README.
+The site is published automatically by the
+[`deploy-evidence.yml`](../../.github/workflows/deploy-evidence.yml) GitHub Actions
+workflow:
+
+- **Live URL:** <https://isanagui1818.github.io/iberia-marketshare/>
+- **Triggers:** every push to `main`, plus manual runs from the **Actions** tab
+  (`workflow_dispatch`) to preview a branch before merging.
+- **What it does:** runs `npm ci && npm run sources && npm run build` in
+  `dashboards/evidence` with `BASE_PATH=/<repo-name>` so internal links resolve from the
+  `/iberia-marketshare/` subpath, then uploads the build as a Pages artifact and deploys
+  it. No secrets or external connections — the data is committed synthetic CSVs.
+
+### One-time setup
+
+In the GitHub repo: **Settings → Pages → Build and deployment → Source = GitHub Actions**.
+After that, the workflow deploys on its own.
+
+### Run / re-deploy manually
+
+1. **Actions** tab → **Deploy Evidence dashboard to GitHub Pages** → **Run workflow**.
+2. Or just push to `main`.
+
+Watch the run with the GitHub CLI:
+
+```bash
+gh run list --workflow=deploy-evidence.yml
+gh run watch        # follow the latest run
+```
+
+> **Alternatives:** Netlify/Vercel also work — set the base dir to `dashboards/evidence`,
+> build command `npm run sources && npm run build`, publish dir `build` (no `BASE_PATH`
+> needed when served from the domain root).
