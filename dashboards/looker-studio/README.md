@@ -4,11 +4,13 @@ Looker Studio is a no-code cloud tool: there's no file to commit. This folder is
 **recipe** — a flattened dataset plus the steps and formulas to rebuild the report. It
 works with a normal **Gmail** account (no work email), and gives a **public link**.
 
-> Data source: [`../data/flat_fact_for_looker.csv`](../data/flat_fact_for_looker.csv)
-> (the star schema denormalized into one wide table — Looker prefers a single source).
+> Data source: `../data/flat_fact_for_looker.csv` (the star schema denormalized into one
+> wide table — Looker prefers a single source). It is **derived data and not committed**:
+> generate it first with `python make_flat_fact.py` (from this folder; needs pandas).
 
 ## 1. Load the data
 
+- Run `python make_flat_fact.py` to produce `../data/flat_fact_for_looker.csv`.
 - Open **Google Sheets** → File → Import → upload `flat_fact_for_looker.csv` → new sheet.
 - In **lookerstudio.google.com** → *Create → Data source → Google Sheets* → pick that sheet.
 - Fix field types: `Date` → Date, `KPI Value` → Number, IDs → Text.

@@ -10,6 +10,10 @@
 # ...but the dashboards need their (synthetic, anonymized) data committed to deploy
 !dashboards/data/**
 
+# ...except the Looker flat export (~15 MB): it's derived data, regenerated on demand with
+# dashboards/looker-studio/make_flat_fact.py, so re-exports don't bloat git history
+dashboards/data/flat_fact_for_looker.csv
+
 # Python / Node build artifacts
 __pycache__/
 *.pyc

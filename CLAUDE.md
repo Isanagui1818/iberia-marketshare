@@ -23,7 +23,7 @@ dashboards/              BI layer on the synthetic data — 3 comparable builds
   data/                  star schema exported to CSV (synthetic, committed)
   streamlit/             Python app (Market Data SN) — built & tested
   evidence/              BI-as-code (SQL + Markdown)
-  looker-studio/         no-code build kit + flattened data
+  looker-studio/         no-code build kit + make_flat_fact.py (generates the flat CSV)
 data/synthetic/          source workbook (gitignored) + README documenting it
 ```
 
@@ -139,4 +139,6 @@ limited by the chart component.
   `*Edit conflict*` files under `dashboards/evidence/.evidence/` and restart `npm run dev`.
 - The synthetic workbook (`data/synthetic/*.xlsx`) is gitignored; the CSVs in
   `dashboards/data/` are committed (synthetic → safe) so the apps deploy self-contained.
+  Exception: `flat_fact_for_looker.csv` is derived data (~15 MB) and is NOT committed —
+  regenerate it with `python dashboards/looker-studio/make_flat_fact.py`.
 - When the dataset changes, re-export the CSVs and keep `sql/04_gold_star_schema` in sync.
