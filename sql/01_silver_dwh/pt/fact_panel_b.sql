@@ -9,10 +9,30 @@
    Engine : Snowflake
    ============================================================================= */
 
+-- Delete-reload: drop the periods present in the new staging load (staging PER_DSC
+-- normalized with the same expression the INSERT uses) before re-inserting them.
 DELETE FROM SILVER_DWH.FACT_PT_PANEL_B
 WHERE PER_DSC IN (
-    SELECT DISTINCT PER_DSC
-    FROM SILVER_DWH.FACT_PT_PANEL_B
+    SELECT DISTINCT
+        CAST(
+            '20' || REGEXP_SUBSTR(PER_DSC, '\\b\\d{2}\\b') ||
+            CASE
+                WHEN LOWER(PER_DSC) LIKE 'jan%' THEN '01'
+                WHEN LOWER(PER_DSC) LIKE 'fev%' THEN '02'
+                WHEN LOWER(PER_DSC) LIKE 'mar%' THEN '03'
+                WHEN LOWER(PER_DSC) LIKE 'abr%' THEN '04'
+                WHEN LOWER(PER_DSC) LIKE 'mai%' THEN '05'
+                WHEN LOWER(PER_DSC) LIKE 'jun%' THEN '06'
+                WHEN LOWER(PER_DSC) LIKE 'jul%' THEN '07'
+                WHEN LOWER(PER_DSC) LIKE 'ago%' THEN '08'
+                WHEN LOWER(PER_DSC) LIKE 'set%' THEN '09'
+                WHEN LOWER(PER_DSC) LIKE 'out%' THEN '10'
+                WHEN LOWER(PER_DSC) LIKE 'nov%' THEN '11'
+                WHEN LOWER(PER_DSC) LIKE 'dez%' THEN '12'
+                ELSE '00'
+            END
+        AS VARCHAR(6))
+    FROM BRONZE_STG.STG_PT_PANEL_B
     WHERE LOA_DAT > COALESCE(
         (SELECT MAX(LOA_DAT) FROM SILVER_DWH.FACT_PT_PANEL_B),
         DATE '1900-01-01')

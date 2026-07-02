@@ -118,23 +118,33 @@ def bps(ms_cur, ms_prev, has_prior=True):
     return (ms_cur - ms_prev) * 10000 if has_prior else 0.0
 
 
+def sales_by(mkt_df, key, periods):
+    """Ventas por miembro de la dimensión `key` en `periods`, en una sola agregación.
+    Devuelve una Series indexada por TODOS los miembros presentes en mkt_df (0 si el
+    miembro no vende en la ventana o la ventana es vacía)."""
+    members = pd.Index(mkt_df[key].dropna().unique(), name=key)
+    if not periods:
+        return pd.Series(0.0, index=members)
+    s = mkt_df.loc[mkt_df["Period ID"].isin(periods)].groupby(key)["KPI Value"].sum()
+    return s.reindex(members, fill_value=0.0).astype(float)
+
+
 def company_table(mkt_df, cur, prev):
     """Tabla por compañía: Ventas, MS, BPS, Crecimiento, %Crecimiento sobre los períodos
     'cur' vs 'prev' (ya resueltos). Si no hay período anterior las medidas comparativas
     valen 0."""
     has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
-    rows = []
-    for c in mkt_df["Manufacturer"].dropna().unique():
-        cd = mkt_df[mkt_df["Manufacturer"] == c]
-        v, vp = ventas(cd, cur), ventas(cd, prev)
-        ms = v / tot_cur if tot_cur else 0
-        msp = vp / tot_prev if tot_prev else 0
-        rows.append({"Compañía": c, "Ventas": v, "Market Share": ms,
-                     "BPS": bps(ms, msp, has_prior),
-                     "Crecimiento Ventas": (v - vp) if has_prior else 0.0,
-                     "%Crecimiento Ventas": (v / vp - 1) if vp else 0.0})
-    df = pd.DataFrame(rows).sort_values("Ventas", ascending=False).reset_index(drop=True)
+    v, vp = sales_by(mkt_df, "Manufacturer", cur), sales_by(mkt_df, "Manufacturer", prev)
+    ms = v / tot_cur if tot_cur else v * 0.0
+    msp = vp / tot_prev if tot_prev else vp * 0.0
+    df = pd.DataFrame({
+        "Compañía": v.index.to_numpy(), "Ventas": v.to_numpy(),
+        "Market Share": ms.to_numpy(),
+        "BPS": ((ms - msp) * 10000 if has_prior else v * 0.0).to_numpy(),
+        "Crecimiento Ventas": ((v - vp) if has_prior else v * 0.0).to_numpy(),
+        "%Crecimiento Ventas": (v / vp - 1).where(vp != 0, 0.0).to_numpy(),
+    }).sort_values("Ventas", ascending=False).reset_index(drop=True)
     df.attrs["has_prior"] = has_prior
     return df
 
@@ -144,21 +154,19 @@ def breakdown_table(mkt_df, field_col, cur, prev, label):
     columnas (la ventana en modo único, o 'Sel.' en multiselección)."""
     has_prior = bool(prev)
     tot_cur, tot_prev = ventas(mkt_df, cur), ventas(mkt_df, prev)
-    rows = []
-    for m in mkt_df[field_col].dropna().unique():
-        gd = mkt_df[mkt_df[field_col] == m]
-        v, vp = ventas(gd, cur), ventas(gd, prev)
-        # market share del segmento = ventas segmento / ventas mercado, dentro del propio segmento universe
-        ms = v / tot_cur if tot_cur else 0
-        msp = vp / tot_prev if tot_prev else 0
-        rows.append({field_col: m, f"Ventas {label}": v, f"Ventas {label}-1": vp,
-                     f"Crecimiento {label}": (v - vp) if has_prior else 0.0,
-                     f"%Crecimiento {label}": (v / vp - 1) if vp else 0.0,
-                     f"Market Share {label}": ms, f"Market Share {label}-1": msp,
-                     f"BPS {label}": bps(ms, msp, has_prior),
-                     f"%Peso {label}": v / tot_cur if tot_cur else 0,
-                     f"%Peso {label}-1": vp / tot_prev if tot_prev else 0})
-    df = pd.DataFrame(rows).sort_values(f"Ventas {label}", ascending=False).reset_index(drop=True)
+    v, vp = sales_by(mkt_df, field_col, cur), sales_by(mkt_df, field_col, prev)
+    # cuota del segmento = ventas del segmento / ventas del mercado (= %Peso en este modelo)
+    ms = v / tot_cur if tot_cur else v * 0.0
+    msp = vp / tot_prev if tot_prev else vp * 0.0
+    df = pd.DataFrame({
+        field_col: v.index.to_numpy(),
+        f"Ventas {label}": v.to_numpy(), f"Ventas {label}-1": vp.to_numpy(),
+        f"Crecimiento {label}": ((v - vp) if has_prior else v * 0.0).to_numpy(),
+        f"%Crecimiento {label}": (v / vp - 1).where(vp != 0, 0.0).to_numpy(),
+        f"Market Share {label}": ms.to_numpy(), f"Market Share {label}-1": msp.to_numpy(),
+        f"BPS {label}": ((ms - msp) * 10000 if has_prior else v * 0.0).to_numpy(),
+        f"%Peso {label}": ms.to_numpy(), f"%Peso {label}-1": msp.to_numpy(),
+    }).sort_values(f"Ventas {label}", ascending=False).reset_index(drop=True)
     df.attrs["has_prior"] = has_prior
     return df
 

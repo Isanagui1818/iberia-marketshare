@@ -7,10 +7,12 @@
    Engine : Snowflake
    ============================================================================= */
 
+-- Delete-reload: drop the periods present in the new staging load (staging PER_DSC
+-- normalized with the same expression the INSERT uses) before re-inserting them.
 DELETE FROM SILVER_DWH.FACT_PT_PANEL_C
 WHERE PER_DSC IN (
-    SELECT DISTINCT PER_DSC
-    FROM SILVER_DWH.FACT_PT_PANEL_C
+    SELECT DISTINCT TO_NUMBER(TO_CHAR(TO_DATE(PER_DSC,'MM/DD/YYYY'),'YYYYMMDD'))
+    FROM BRONZE_STG.STG_PT_PANEL_C
     WHERE LOA_DAT > COALESCE(
         (SELECT MAX(LOA_DAT) FROM SILVER_DWH.FACT_PT_PANEL_C),
         DATE '1900-01-01')

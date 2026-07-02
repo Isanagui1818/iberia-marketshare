@@ -4,8 +4,6 @@ Informe multipágina: Menú · Glosario · Vista General · Performance · Evolu
 Segmento de Mercado · Birth Rate · Informe Dinámico.
 """
 
-# cd C:\Users\isana\Documents\Claude\iberia-marketshare-dwh\dashboards\streamli python -m streamlit run app.py
-
 from io import BytesIO
 import pandas as pd
 import plotly.graph_objects as go
@@ -119,8 +117,8 @@ def kpi(col, title, value, sub_html=""):
 
 
 def header(sub):
-    a, b = st.columns([1, 5])
-    a.markdown(f"**Datos de Mercado SN**")
+    a = st.columns([1, 5])[0]   # columna estrecha: mantiene compacto el rótulo
+    a.markdown("**Datos de Mercado SN**")
     a.caption(sub)
 
 
@@ -183,7 +181,7 @@ def page_vista():
     # --- KPIs ---
     if not multi:
         def rng(tipo, var):
-            w = C.window(a, "L6M", var)
+            w = C.window(a, tipo, var)
             return f"{min(w)%100:02d}/{min(w)//100} - {max(w)%100:02d}/{max(w)//100}" if w else ""
         v_prev = C.ventas(comp, C.window(a, "L6M", "prev"))
         v_cur = C.ventas(comp, C.window(a, "L6M", "current"))
@@ -236,7 +234,9 @@ def page_vista():
             return C.ventas(comp, C.window(a_chart, tipo, var))
         msc = C.market_share(comp, mkt, C.window(a_chart, tipo, "current"))
         if metr == "BPS":
-            return C.bps(msc, C.market_share(comp, mkt, C.window(a_chart, tipo, "prev")))
+            # sin ventana anterior (borde de los datos) el BPS debe ser 0, no cuota×10000
+            wprev = C.window(a_chart, tipo, "prev")
+            return C.bps(msc, C.market_share(comp, mkt, wprev), bool(wprev))
         return C.market_share(comp, mkt, C.window(a_chart, tipo, var))
 
     def fmtval(v):
@@ -396,18 +396,23 @@ def page_evolucion():
     modo = st.radio("Tipo de gráfico", ["Líneas", "Barras"], horizontal=True, key="ev_modo")
     campo = [k for k, v in C.FIELDS.items() if v == col][0]
     labels = [f"{p//100}-{p%100:02d}" for p in C.PERIODS]
-    market_pm = {p: C.ventas(mkt, [p]) for p in C.PERIODS}     # denominador = mercado total
+    market_pm = (mkt.groupby("Period ID")["KPI Value"].sum()      # denominador = mercado total
+                 .reindex(C.PERIODS, fill_value=0.0))
     top = mkt.groupby(col)["KPI Value"].sum().nlargest(6).index.tolist()
+    # una sola agregación miembro × período (en vez de un filtrado por celda)
+    per_member = (mkt[mkt[col].isin(top)]
+                  .groupby([col, "Period ID"])["KPI Value"].sum()
+                  .unstack(fill_value=0.0)
+                  .reindex(index=top, columns=C.PERIODS, fill_value=0.0))
     st.markdown(f"**Evolución por {campo}** — top {len(top)} · {kpisel}")
     palette = [C.NAVY, C.ACCENT, C.GREEN, "#E0A11B", "#8E44AD", "#16A0A0"]
     fig = go.Figure()
     data = {}
     for i, m in enumerate(top):
-        md = mkt[mkt[col] == m]
-        if kpisel == "Ventas":
-            y = [C.ventas(md, [p]) for p in C.PERIODS]
-        else:  # cuota = ventas del miembro / ventas del mercado en ese período
-            y = [(C.ventas(md, [p]) / market_pm[p] if market_pm[p] else 0) for p in C.PERIODS]
+        serie = per_member.loc[m]
+        if kpisel != "Ventas":  # cuota = ventas del miembro / ventas del mercado en ese período
+            serie = (serie / market_pm).where(market_pm != 0, 0.0)
+        y = serie.tolist()
         data[str(m)] = y
         cc = palette[i % len(palette)]
         if modo == "Líneas":
